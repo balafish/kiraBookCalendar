@@ -253,14 +253,20 @@ export default function App() {
     if (file && selectedDay) {
       // Compress to ~25KB (base64 string length) to stay within Firestore 1MB doc limit
       const compressed = await compressImage(file, 25_000);
+      const day = selectedDay;
       setDays((prev) => ({
         ...prev,
-        [selectedDay]: {
-          ...prev[selectedDay],
+        [day]: {
+          ...prev[day],
           image: compressed,
         },
       }));
-      closeModal();
+      // Auto-trigger OCR + Google Books search, keep modal open
+      setModal(day);
+      setBookEditMode(true);
+      setBookEditTitle(days[day].book.title);
+      setBookEditAuthor(days[day].book.author || "");
+      recognizeFromImage(day, compressed);
     }
     e.target.value = "";
   };
@@ -394,8 +400,8 @@ export default function App() {
   };
 
   // OCR recognize from uploaded cover image
-  const recognizeFromImage = async (day: number) => {
-    const img = days[day]?.image;
+  const recognizeFromImage = async (day: number, imgOverride?: string) => {
+    const img = imgOverride || days[day]?.image;
     if (!img) return;
     setRecognizing(true);
     try {
