@@ -1,73 +1,158 @@
-# React + TypeScript + Vite
+# Kira 愛讀冊
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+每日一書 · track your daily reads
 
-Currently, two official plugins are available:
+A personal daily book reading tracker built with React + TypeScript. Upload book covers, track reading progress, write notes, and sync everything to the cloud.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**Live**: [https://balafish.github.io/kiraBookCalendar/](https://balafish.github.io/kiraBookCalendar/)
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Google Login** — Sign in with Google to sync data across devices
+- **Book Cover Upload** — Upload and compress book cover images
+- **OCR Recognition** — Auto-detect book titles from cover images using Tesseract.js
+- **Google Books Search** — Search and apply book metadata (title, author, synopsis)
+- **Reading Tracker** — Mark books as read with visual checkmark badges on covers
+- **Favorites** — Mark books as favorites with heart icons on covers
+- **Daily Notes** — Write reading notes for each day
+- **Calendar Views** — Switch between weekly, biweekly, and monthly calendar views
+- **Cloud Sync** — All data automatically synced to Firestore per user
+- **Responsive Design** — Works on desktop, tablet, and mobile
 
-## Expanding the ESLint configuration
+## Screenshots
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| Week Strip | Calendar Grid | Book Detail |
+|:---:|:---:|:---:|
+| 本週書單 with badges | 月曆總覽 with view tabs | Upload, OCR, edit |
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Tech Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, TypeScript, Vite |
+| Auth | Firebase Auth (Google) |
+| Database | Cloud Firestore |
+| OCR | Tesseract.js v7 |
+| Book Data | Google Books API |
+| Deployment | GitHub Pages + GitHub Actions |
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Getting Started
+
+### Prerequisites
+
+- Node.js 20+
+- A Firebase project with Auth and Firestore enabled
+
+### Setup
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/balafish/kiraBookCalendar.git
+cd kiraBookCalendar
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Install dependencies:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
+
+3. Configure Firebase — copy `.env.example` to `.env` and fill in your Firebase credentials:
+
+```bash
+cp .env.example .env
+```
+
+```env
+VITE_FIREBASE_API_KEY=your-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=1:123456789:web:abcdef
+```
+
+4. Start the dev server:
+
+```bash
+npm run dev
+```
+
+### Firebase Setup
+
+1. Create a project at [Firebase Console](https://console.firebase.google.com/)
+2. Enable **Authentication** > **Google** sign-in provider
+3. Enable **Cloud Firestore** (start in test mode or configure security rules)
+4. Add your domain to **Authentication** > **Settings** > **Authorized domains**
+
+### Firestore Security Rules
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/calendars/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
+
+## Scripts
+
+```bash
+npm run dev       # Start development server
+npm run build     # Type-check and build for production
+npm run lint      # Run ESLint
+npm run preview   # Preview production build locally
+```
+
+## Deployment
+
+The app auto-deploys to GitHub Pages on push to `main` via GitHub Actions.
+
+### Required GitHub Secrets
+
+Set these in **Settings** > **Secrets and variables** > **Actions**:
+
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+
+### GitHub Pages Setup
+
+1. Go to **Settings** > **Pages**
+2. Set **Source** to **GitHub Actions**
+
+## Data Model
+
+Each user's data is stored per month in Firestore at `users/{uid}/calendars/{year}-{month}`:
+
+```json
+{
+  "1": {
+    "image": "data:image/jpeg;base64,...",
+    "read": true,
+    "favorite": false,
+    "notes": "Great book about habits",
+    "book": {
+      "title": "Atomic Habits",
+      "author": "James Clear",
+      "description": "A guide to building good habits...",
+      "emoji": "⚛️",
+      "color": "#E8A87C"
+    }
+  },
+  "2": { ... }
+}
+```
+
+Images are compressed to ~25KB (300px max, JPEG) to stay within Firestore's 1MB document limit.
+
+## License
+
+Private project.
