@@ -172,21 +172,51 @@ export default function App() {
     fileInputRef.current?.click();
   };
 
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (file: File, maxSize: number): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const canvas = document.createElement("canvas");
+        // Scale down to fit within maxDim while keeping aspect ratio
+        const maxDim = 300;
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const ratio = Math.min(maxDim / width, maxDim / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, width, height);
+        // Try progressively lower quality until under maxSize
+        let quality = 0.8;
+        let result = canvas.toDataURL("image/jpeg", quality);
+        while (result.length > maxSize && quality > 0.1) {
+          quality -= 0.1;
+          result = canvas.toDataURL("image/jpeg", quality);
+        }
+        resolve(result);
+      };
+      img.src = url;
+    });
+  };
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && selectedDay) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setDays((prev) => ({
-          ...prev,
-          [selectedDay]: {
-            ...prev[selectedDay],
-            image: ev.target?.result as string,
-          },
-        }));
-        setModal(null);
-      };
-      reader.readAsDataURL(file);
+      // Compress to ~25KB (base64 string length) to stay within Firestore 1MB doc limit
+      const compressed = await compressImage(file, 25_000);
+      setDays((prev) => ({
+        ...prev,
+        [selectedDay]: {
+          ...prev[selectedDay],
+          image: compressed,
+        },
+      }));
+      setModal(null);
     }
     e.target.value = "";
   };
