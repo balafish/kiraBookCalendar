@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   onAuthStateChanged,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   signOut,
   type User,
 } from "firebase/auth";
@@ -13,11 +12,6 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Handle redirect result when returning from Google login
-    getRedirectResult(auth).catch(() => {
-      // Redirect result errors are non-fatal (e.g. user cancelled)
-    });
-
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
@@ -25,7 +19,10 @@ export function useAuth() {
     return unsub;
   }, []);
 
-  const login = () => signInWithRedirect(auth, googleProvider);
+  const login = () =>
+    signInWithPopup(auth, googleProvider).catch(() => {
+      // User closed popup or popup blocked — non-fatal
+    });
   const logout = () => signOut(auth);
 
   return { user, loading, login, logout };
