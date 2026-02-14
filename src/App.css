@@ -1288,3 +1288,319 @@
   font-size: 12px;
   color: #6b6560;
 }
+
+/* ══════════════════════════════════════════════
+   RWD — Responsive breakpoints (desktop-first)
+   ══════════════════════════════════════════════ */
+
+/* ── Tablet: ≤768px ── */
+
+@media (max-width: 768px) {
+  .rc-root {
+    padding: 16px 10px;
+  }
+
+  /* Title */
+  .rc-title {
+    font-size: 20px;
+  }
+
+  .rc-login-title {
+    font-size: 28px;
+  }
+
+  /* Day headers: full → short */
+  .rc-day-header-full {
+    display: none;
+  }
+  .rc-day-header-short {
+    display: block;
+  }
+
+  /* Carousel shrink */
+  .rc-carousel-stage {
+    height: 250px;
+  }
+  .rc-carousel-track {
+    width: 140px;
+  }
+  .rc-carousel-item {
+    width: 140px;
+    height: 210px;
+  }
+
+  /* Grid */
+  .rc-grid {
+    gap: 3px;
+  }
+  .rc-day-headers {
+    gap: 3px;
+  }
+
+  /* Month nav */
+  .rc-month-label {
+    font-size: 16px;
+    min-width: 150px;
+  }
+  .rc-nav {
+    gap: 12px;
+  }
+}
+
+/* ── Mobile: ≤520px ── */
+
+@media (max-width: 520px) {
+  .rc-root {
+    padding: 12px 8px;
+  }
+
+  .rc-title {
+    font-size: 18px;
+  }
+
+  .rc-login-title {
+    font-size: 24px;
+  }
+
+  .rc-login-btn {
+    padding: 12px 24px;
+    font-size: 15px;
+  }
+
+  /* Carousel shrink more */
+  .rc-carousel-stage {
+    height: 210px;
+  }
+  .rc-carousel-track {
+    width: 110px;
+  }
+  .rc-carousel-item {
+    width: 110px;
+    height: 170px;
+  }
+  .rc-carousel-arrow {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
+  .rc-carousel-center-name {
+    font-size: 14px;
+  }
+  .rc-carousel-center-emoji {
+    font-size: 14px;
+  }
+
+  /* Grid cells */
+  .rc-grid {
+    gap: 2px;
+  }
+  .rc-day-headers {
+    gap: 2px;
+  }
+  .rc-cell {
+    padding: 3px;
+    border-radius: 6px;
+    gap: 2px;
+  }
+  .rc-cell-empty {
+    aspect-ratio: 1 / 1.2;
+  }
+  .rc-cell {
+    aspect-ratio: 1 / 1.2;
+  }
+  .rc-grid-compact .rc-cell {
+    aspect-ratio: 1 / 1.05;
+  }
+  .rc-day-num {
+    font-size: 9px;
+  }
+
+  /* Badges shrink */
+  .rc-badge-read {
+    width: 15px;
+    height: 15px;
+    font-size: 8px;
+    bottom: 2px;
+    right: 2px;
+  }
+  .rc-badge-fav {
+    font-size: 11px;
+    top: 2px;
+    right: 2px;
+  }
+
+  /* View tabs */
+  .rc-view-tab {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+
+  /* Month header */
+  .rc-month-label {
+    font-size: 14px;
+    min-width: 120px;
+  }
+  .rc-nav-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  /* Book cover text */
+  .book-emoji {
+    font-size: 16px;
+  }
+  .book-title {
+    font-size: 7px;
+  }
+
+  /* Section spacing */
+  .rc-section {
+    margin-bottom: 20px;
+  }
+  .rc-carousel-section {
+    margin-bottom: 20px;
+  }
+
+  /* Hover overlay - smaller icon */
+  .rc-hover-overlay {
+    font-size: 16px;
+  }
+
+  /* Progress ring */
+  .rc-progress-text {
+    font-size: 14px;
+  }
+  .rc-progress-text span {
+    font-size: 10px;
+  }
+  .rc-ring-small {
+    width: 32px;
+    height: 32px;
+  }
+  .rc-ring-small-inner {
+    width: 22px;
+    height: 22px;
+    font-size: 7px;
+  }
+
+  /* Legend */
+  .rc-legend {
+    gap: 12px;
+    font-size: 10px;
+  }
+}
+
+/* ── Very small phones: ≤370px ── */
+
+@media (max-width: 370px) {
+  .rc-root {
+    padding: 10px 6px;
+  }
+
+  .rc-title {
+    font-size: 16px;
+  }
+
+  .rc-login-title {
+    font-size: 20px;
+  }
+
+  /* Carousel minimal */
+  .rc-carousel-stage {
+    height: 180px;
+  }
+  .rc-carousel-track {
+    width: 90px;
+  }
+  .rc-carousel-item {
+    width: 90px;
+    height: 145px;
+  }
+  .rc-carousel-arrow {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+  }
+  .rc-carousel-day-label {
+    font-size: 8px;
+  }
+  .rc-carousel-day-num {
+    font-size: 10px;
+  }
+  .rc-carousel-item[data-offset="0"] .rc-carousel-day-num {
+    font-size: 12px;
+  }
+  .rc-carousel-center-name {
+    font-size: 12px;
+  }
+
+  /* Grid minimal */
+  .rc-cell {
+    padding: 2px;
+    border-radius: 5px;
+    gap: 1px;
+  }
+  .rc-day-num {
+    font-size: 8px;
+  }
+
+  /* Badges smallest */
+  .rc-badge-read {
+    width: 13px;
+    height: 13px;
+    font-size: 7px;
+    bottom: 1px;
+    right: 1px;
+  }
+  .rc-badge-fav {
+    font-size: 9px;
+    top: 1px;
+    right: 1px;
+  }
+
+  /* Month nav compact */
+  .rc-month-label {
+    font-size: 13px;
+    min-width: 100px;
+  }
+  .rc-nav {
+    gap: 8px;
+  }
+  .rc-nav-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  /* View tabs */
+  .rc-view-tab {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  /* Book cover */
+  .book-emoji {
+    font-size: 14px;
+  }
+  .book-title {
+    font-size: 6px;
+  }
+
+  /* Auth bar */
+  .rc-auth-name {
+    font-size: 10px;
+    max-width: 80px;
+  }
+
+  /* Legend */
+  .rc-legend {
+    gap: 8px;
+    font-size: 9px;
+  }
+  .rc-legend-box {
+    width: 12px;
+    height: 12px;
+    font-size: 7px;
+  }
+}
