@@ -7,29 +7,44 @@ import { useCloudStorage } from "./hooks/useCloudStorage";
 import type { DaysMap } from "./types";
 import "./App.css";
 
-function storageKey(y: number, m: number) {
-  return `kira-calendar-${y}-${m}`;
+function storageKey(uid: string | null, y: number, m: number) {
+  const prefix = uid || "local";
+  return `kira-calendar-${prefix}-${y}-${m}`;
 }
 
-function saveToStorage(y: number, m: number, days: DaysMap) {
+function saveToStorage(
+  uid: string | null,
+  y: number,
+  m: number,
+  days: DaysMap,
+) {
   const toSave: Record<
     number,
     { image: string | null; read: boolean; notes?: string }
   > = {};
   for (const [k, v] of Object.entries(days)) {
     if (v.image || v.read || v.notes) {
-      toSave[Number(k)] = { image: v.image, read: v.read, notes: v.notes || "" };
+      toSave[Number(k)] = {
+        image: v.image,
+        read: v.read,
+        notes: v.notes || "",
+      };
     }
   }
   if (Object.keys(toSave).length > 0) {
-    localStorage.setItem(storageKey(y, m), JSON.stringify(toSave));
+    localStorage.setItem(storageKey(uid, y, m), JSON.stringify(toSave));
   } else {
-    localStorage.removeItem(storageKey(y, m));
+    localStorage.removeItem(storageKey(uid, y, m));
   }
 }
 
-function loadFromStorage(y: number, m: number, base: DaysMap): DaysMap {
-  const raw = localStorage.getItem(storageKey(y, m));
+function loadFromStorage(
+  uid: string | null,
+  y: number,
+  m: number,
+  base: DaysMap,
+): DaysMap {
+  const raw = localStorage.getItem(storageKey(uid, y, m));
   if (!raw) return base;
   try {
     const saved: Record<
@@ -61,16 +76,37 @@ export default function App() {
   const [month, setMonth] = useState(now.getMonth());
   const [days, setDays] = useState(() => {
     const base = generateInitialData(now.getFullYear(), now.getMonth());
-    return loadFromStorage(now.getFullYear(), now.getMonth(), base);
+    return loadFromStorage(null, now.getFullYear(), now.getMonth(), base);
   });
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [modal, setModal] = useState<number | null>(null);
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesDraft, setNotesDraft] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const prevUidRef = useRef<string | null | undefined>(undefined);
 
-  // localStorage persistence
+  // Reset data when user changes (login/logout/switch account)
   useEffect(() => {
-    saveToStorage(year, month, days);
-  }, [days, year, month]);
+    if (authLoading) return;
+    const currentUid = user?.uid ?? null;
+    if (prevUidRef.current === undefined) {
+      // First load — just record the uid
+      prevUidRef.current = currentUid;
+      return;
+    }
+    if (prevUidRef.current === currentUid) return;
+    prevUidRef.current = currentUid;
+    // Reload data for the new user
+    const base = generateInitialData(year, month);
+    setDays(loadFromStorage(currentUid, year, month, base));
+    setModal(null);
+    setEditingNotes(false);
+  }, [user?.uid, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // localStorage persistence (per user)
+  useEffect(() => {
+    saveToStorage(user?.uid ?? null, year, month, days);
+  }, [days, year, month, user?.uid]);
 
   // Cloud sync: apply data from Firestore when loaded
   const applyCloud = useCallback(
@@ -118,7 +154,7 @@ export default function App() {
     setYear(ny);
     setMonth(nm);
     const base = generateInitialData(ny, nm);
-    setDays(loadFromStorage(ny, nm, base));
+    setDays(loadFromStorage(user?.uid ?? null, ny, nm, base));
     setSelectedDay(null);
     setModal(null);
   };
@@ -191,9 +227,6 @@ export default function App() {
   }
 
   const todayData = isCurrentMonth ? days[todayDayNum] : null;
-
-  const [editingNotes, setEditingNotes] = useState(false);
-  const [notesDraft, setNotesDraft] = useState("");
 
   const updateNotes = (day: number, text: string) => {
     setDays((prev) => ({
