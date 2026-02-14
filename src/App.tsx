@@ -374,7 +374,6 @@ export default function App() {
     setBookSearchResults([]);
     setSearchQuery("");
     setEditingNotes(false);
-    setCarouselExpanded(false);
   };
 
   // Open book edit mode
@@ -696,7 +695,7 @@ export default function App() {
                   </button>
                   <button
                     className="rc-info-action-btn rc-info-detail-btn"
-                    onClick={() => { setCarouselExpanded(false); setModal(centerDay.dayNum); }}
+                    onClick={() => setModal(centerDay.dayNum)}
                   >
                     {"詳細"}
                   </button>
