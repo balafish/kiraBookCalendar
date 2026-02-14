@@ -12,10 +12,13 @@ function storageKey(y: number, m: number) {
 }
 
 function saveToStorage(y: number, m: number, days: DaysMap) {
-  const toSave: Record<number, { image: string | null; read: boolean }> = {};
+  const toSave: Record<
+    number,
+    { image: string | null; read: boolean; notes?: string }
+  > = {};
   for (const [k, v] of Object.entries(days)) {
-    if (v.image || v.read) {
-      toSave[Number(k)] = { image: v.image, read: v.read };
+    if (v.image || v.read || v.notes) {
+      toSave[Number(k)] = { image: v.image, read: v.read, notes: v.notes || "" };
     }
   }
   if (Object.keys(toSave).length > 0) {
@@ -29,13 +32,20 @@ function loadFromStorage(y: number, m: number, base: DaysMap): DaysMap {
   const raw = localStorage.getItem(storageKey(y, m));
   if (!raw) return base;
   try {
-    const saved: Record<number, { image: string | null; read: boolean }> =
-      JSON.parse(raw);
+    const saved: Record<
+      number,
+      { image: string | null; read: boolean; notes?: string }
+    > = JSON.parse(raw);
     const result = { ...base };
     for (const [k, v] of Object.entries(saved)) {
       const day = Number(k);
       if (result[day]) {
-        result[day] = { ...result[day], image: v.image, read: v.read };
+        result[day] = {
+          ...result[day],
+          image: v.image,
+          read: v.read,
+          notes: v.notes || "",
+        };
       }
     }
     return result;
@@ -64,13 +74,23 @@ export default function App() {
 
   // Cloud sync: apply data from Firestore when loaded
   const applyCloud = useCallback(
-    (saved: Record<number, { image: string | null; read: boolean }>) => {
+    (
+      saved: Record<
+        number,
+        { image: string | null; read: boolean; notes?: string }
+      >,
+    ) => {
       setDays((prev) => {
         const result = { ...prev };
         for (const [k, v] of Object.entries(saved)) {
           const day = Number(k);
           if (result[day]) {
-            result[day] = { ...result[day], image: v.image, read: v.read };
+            result[day] = {
+              ...result[day],
+              image: v.image,
+              read: v.read,
+              notes: v.notes || "",
+            };
           }
         }
         return result;
@@ -146,25 +166,41 @@ export default function App() {
   const totalCount = Object.keys(days).length;
   const progress = Math.round((readCount / totalCount) * 100);
 
-  // Compute this week (Sun-Sat containing today)
+  // Compute week centered on today: 3 days before | TODAY | 3 days after
   const isCurrentMonth =
     year === now.getFullYear() && month === now.getMonth();
   const todayDayNum = now.getDate();
-  const todayDayOfWeek = now.getDay(); // 0=Sun
 
-  const weekDays: { dayNum: number; dayOfWeek: number; inMonth: boolean }[] =
-    [];
-  for (let i = 0; i < 7; i++) {
+  const weekDays: {
+    date: Date;
+    dayNum: number;
+    dayOfWeek: number;
+    inMonth: boolean;
+    isCenter: boolean;
+  }[] = [];
+  for (let i = -3; i <= 3; i++) {
     const d = new Date(now);
-    d.setDate(now.getDate() - todayDayOfWeek + i);
+    d.setDate(now.getDate() + i);
     weekDays.push({
+      date: d,
       dayNum: d.getDate(),
-      dayOfWeek: i,
+      dayOfWeek: d.getDay(),
       inMonth: d.getFullYear() === year && d.getMonth() === month,
+      isCenter: i === 0,
     });
   }
 
   const todayData = isCurrentMonth ? days[todayDayNum] : null;
+
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesDraft, setNotesDraft] = useState("");
+
+  const updateNotes = (day: number, text: string) => {
+    setDays((prev) => ({
+      ...prev,
+      [day]: { ...prev[day], notes: text },
+    }));
+  };
 
   return (
     <div className="rc-root">
@@ -223,18 +259,17 @@ export default function App() {
           </div>
         </div>
 
-        {/* === This Week Section === */}
+        {/* === This Week Section (centered on today) === */}
         {isCurrentMonth && (
           <section className="rc-section">
             <h2 className="rc-section-title">{"本週書單"}</h2>
             <div className="rc-week-strip">
-              {weekDays.map((wd) => {
+              {weekDays.map((wd, idx) => {
                 const d = wd.inMonth ? days[wd.dayNum] : null;
-                const isToday = wd.dayNum === todayDayNum && wd.inMonth;
                 return (
                   <div
-                    key={wd.dayOfWeek}
-                    className={`rc-week-card${isToday ? " rc-week-today" : ""}${!wd.inMonth ? " rc-week-outside" : ""}`}
+                    key={idx}
+                    className={`rc-week-card${wd.isCenter ? " rc-week-today" : ""}${!wd.inMonth ? " rc-week-outside" : ""}`}
                     onClick={() => wd.inMonth && d && setModal(wd.dayNum)}
                   >
                     <div className="rc-week-day-label">
@@ -248,6 +283,11 @@ export default function App() {
                         <div className="rc-week-book-placeholder" />
                       )}
                     </div>
+                    {wd.isCenter && d && (
+                      <div className="rc-week-center-title">
+                        {d.book.title}
+                      </div>
+                    )}
                     {d && (
                       <div
                         className={`rc-week-status ${d.read ? "read" : "unread"}`}
@@ -262,41 +302,66 @@ export default function App() {
           </section>
         )}
 
-        {/* === Today's Book Section === */}
+        {/* === Today's Notes Section === */}
         {isCurrentMonth && todayData && (
           <section className="rc-section">
-            <h2 className="rc-section-title">{"今日讀書"}</h2>
-            <div className="rc-today-card" onClick={() => setModal(todayDayNum)}>
-              <div className="rc-today-cover">
-                <BookCover book={todayData.book} image={todayData.image} />
-              </div>
-              <div className="rc-today-info">
-                <div className="rc-today-emoji">{todayData.book.emoji}</div>
-                <div className="rc-today-title">{todayData.book.title}</div>
-                <div className="rc-today-date">
-                  {month + 1}月{todayDayNum}日
-                </div>
-                <div className="rc-today-actions">
+            <h2 className="rc-section-title">{"今日筆記"}</h2>
+            <div className="rc-notes-card">
+              <div className="rc-notes-header">
+                <span className="rc-notes-date">
+                  {todayData.book.emoji} {todayData.book.title} — {month + 1}月
+                  {todayDayNum}日
+                </span>
+                {!editingNotes && (
                   <button
-                    className={`rc-today-btn ${todayData.read ? "rc-today-btn-done" : "rc-today-btn-mark"}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleRead(todayDayNum);
+                    className="rc-notes-edit-btn"
+                    onClick={() => {
+                      setNotesDraft(todayData.notes);
+                      setEditingNotes(true);
                     }}
                   >
-                    {todayData.read ? "✓ 已讀" : "標記已讀"}
+                    {"編輯"}
                   </button>
-                  <button
-                    className="rc-today-btn rc-today-btn-upload"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      triggerUpload(todayDayNum);
-                    }}
-                  >
-                    {"📷 上傳封面"}
-                  </button>
-                </div>
+                )}
               </div>
+              {editingNotes ? (
+                <div className="rc-notes-editor">
+                  <textarea
+                    className="rc-notes-textarea"
+                    value={notesDraft}
+                    onChange={(e) => setNotesDraft(e.target.value)}
+                    placeholder="寫下今天的閱讀心得..."
+                    autoFocus
+                  />
+                  <div className="rc-notes-actions">
+                    <button
+                      className="rc-notes-save-btn"
+                      onClick={() => {
+                        updateNotes(todayDayNum, notesDraft);
+                        setEditingNotes(false);
+                      }}
+                    >
+                      {"儲存"}
+                    </button>
+                    <button
+                      className="rc-notes-cancel-btn"
+                      onClick={() => setEditingNotes(false)}
+                    >
+                      {"取消"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className={`rc-notes-display${!todayData.notes ? " rc-notes-empty" : ""}`}
+                  onClick={() => {
+                    setNotesDraft(todayData.notes);
+                    setEditingNotes(true);
+                  }}
+                >
+                  {todayData.notes || "點擊此處寫下今天的閱讀心得..."}
+                </div>
+              )}
             </div>
           </section>
         )}

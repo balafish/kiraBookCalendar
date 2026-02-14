@@ -4,7 +4,7 @@ import { db } from "../firebase";
 import type { DaysMap } from "../types";
 import type { User } from "firebase/auth";
 
-type SavedDay = { image: string | null; read: boolean };
+type SavedDay = { image: string | null; read: boolean; notes?: string };
 type SavedData = Record<number, SavedDay>;
 
 function docPath(uid: string, y: number, m: number) {
@@ -14,8 +14,8 @@ function docPath(uid: string, y: number, m: number) {
 function extractSaveData(days: DaysMap): SavedData {
   const data: SavedData = {};
   for (const [k, v] of Object.entries(days)) {
-    if (v.image || v.read) {
-      data[Number(k)] = { image: v.image, read: v.read };
+    if (v.image || v.read || v.notes) {
+      data[Number(k)] = { image: v.image, read: v.read, notes: v.notes || "" };
     }
   }
   return data;

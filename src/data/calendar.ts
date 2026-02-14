@@ -20,6 +20,7 @@ export function generateInitialData(year: number, month: number): DaysMap {
       image: null,
       read: isPast ? Math.random() > 0.25 : false,
       isToday,
+      notes: "",
     };
   }
 

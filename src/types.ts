@@ -9,6 +9,7 @@ export interface DayData {
   image: string | null;
   read: boolean;
   isToday: boolean;
+  notes: string;
 }
 
 export type DaysMap = Record<number, DayData>;
