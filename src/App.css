@@ -666,6 +666,62 @@
   color: #fff;
 }
 
+/* ── Notes Tooltip ── */
+.rc-tooltip {
+  position: fixed;
+  z-index: 2000;
+  max-width: 260px;
+  min-width: 120px;
+  background: #1c1a17;
+  border: 1px solid #3a3530;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  animation: tooltipFadeIn 0.15s ease;
+  transform: translate(-50%, -100%) translateY(-12px);
+}
+
+@keyframes tooltipFadeIn {
+  from { opacity: 0; transform: translate(-50%, -100%) translateY(-6px); }
+  to { opacity: 1; transform: translate(-50%, -100%) translateY(-12px); }
+}
+
+.rc-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  background: #1c1a17;
+  border-right: 1px solid #3a3530;
+  border-bottom: 1px solid #3a3530;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.rc-tooltip-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #6b8f71;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rc-tooltip-notes {
+  font-family: 'Crimson Text', Georgia, serif;
+  font-size: 13px;
+  color: #e8e4df;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
 /* Modal */
 .rc-modal-backdrop {
   position: fixed;

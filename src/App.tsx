@@ -82,8 +82,14 @@ export default function App() {
   const [modal, setModal] = useState<number | null>(null);
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesDraft, setNotesDraft] = useState("");
+  const [tooltip, setTooltip] = useState<{
+    day: number;
+    x: number;
+    y: number;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevUidRef = useRef<string | null | undefined>(undefined);
+  const longPressRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Reset data when user changes (login/logout/switch account)
   useEffect(() => {
@@ -265,6 +271,36 @@ export default function App() {
     }));
   };
 
+  // Tooltip handlers for showing notes on hover / long-press
+  const showTooltip = (day: number, e: React.MouseEvent | Touch) => {
+    if (!days[day]?.notes) return;
+    setTooltip({ day, x: e.clientX, y: e.clientY });
+  };
+
+  const hideTooltip = () => {
+    setTooltip(null);
+    if (longPressRef.current) {
+      clearTimeout(longPressRef.current);
+      longPressRef.current = undefined;
+    }
+  };
+
+  const bookMouseEnter = (day: number, e: React.MouseEvent) => {
+    showTooltip(day, e);
+  };
+
+  const bookTouchStart = (day: number, e: React.TouchEvent) => {
+    if (!days[day]?.notes) return;
+    const touch = e.touches[0];
+    longPressRef.current = setTimeout(() => {
+      setTooltip({ day, x: touch.clientX, y: touch.clientY });
+    }, 500);
+  };
+
+  const bookTouchEnd = () => {
+    hideTooltip();
+  };
+
   return (
     <div className="rc-root">
       <input
@@ -339,7 +375,18 @@ export default function App() {
                       {DAY_NAMES_SHORT[wd.dayOfWeek]}
                     </div>
                     <div className="rc-week-day-num">{wd.dayNum}</div>
-                    <div className="rc-week-book">
+                    <div
+                      className="rc-week-book"
+                      onMouseEnter={(e) =>
+                        wd.inMonth && d && bookMouseEnter(wd.dayNum, e)
+                      }
+                      onMouseLeave={hideTooltip}
+                      onTouchStart={(e) =>
+                        wd.inMonth && d && bookTouchStart(wd.dayNum, e)
+                      }
+                      onTouchEnd={bookTouchEnd}
+                      onTouchCancel={bookTouchEnd}
+                    >
                       {d ? (
                         <BookCover book={d.book} image={d.image} />
                       ) : (
@@ -485,7 +532,14 @@ export default function App() {
                       {d.read ? "✓" : ""}
                     </button>
                   </div>
-                  <div className="rc-cell-book">
+                  <div
+                    className="rc-cell-book"
+                    onMouseEnter={(e) => bookMouseEnter(day, e)}
+                    onMouseLeave={hideTooltip}
+                    onTouchStart={(e) => bookTouchStart(day, e)}
+                    onTouchEnd={bookTouchEnd}
+                    onTouchCancel={bookTouchEnd}
+                  >
                     <BookCover book={d.book} image={d.image} />
                   </div>
                   <div className="rc-hover-overlay">{"📷"}</div>
@@ -516,6 +570,22 @@ export default function App() {
           </div>
         </section>
       </div>
+
+      {/* Notes Tooltip */}
+      {tooltip && days[tooltip.day]?.notes && (
+        <div
+          className="rc-tooltip"
+          style={{
+            left: tooltip.x,
+            top: tooltip.y,
+          }}
+        >
+          <div className="rc-tooltip-title">
+            {days[tooltip.day].book.emoji} {days[tooltip.day].book.title}
+          </div>
+          <div className="rc-tooltip-notes">{days[tooltip.day].notes}</div>
+        </div>
+      )}
 
       {/* Modal */}
       {modal && days[modal] && (
