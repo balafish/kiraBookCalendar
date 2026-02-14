@@ -731,6 +731,199 @@
   color: #fff;
 }
 
+/* ── View Tabs ── */
+.rc-view-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.rc-view-tab {
+  background: #181614;
+  border: 1px solid #2a2520;
+  color: #6b6560;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 6px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.rc-view-tab:hover {
+  border-color: #3a3530;
+  color: #a89f91;
+}
+
+.rc-view-tab.active {
+  background: #6b8f71;
+  border-color: #6b8f71;
+  color: #fff;
+}
+
+.rc-grid-compact .rc-cell {
+  aspect-ratio: 1 / 1.1;
+}
+
+/* ── Book Edit in Modal ── */
+.rc-modal-book-info {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.rc-modal-book-author {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #6b6560;
+  margin-top: 4px;
+}
+
+.rc-modal-edit-book-btn {
+  background: none;
+  border: 1px solid #2a2520;
+  color: #a89f91;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 8px;
+}
+
+.rc-modal-edit-book-btn:hover {
+  border-color: #6b8f71;
+  color: #6b8f71;
+}
+
+.rc-book-edit-panel {
+  background: #1e1c19;
+  border: 1px solid #2a2520;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rc-book-edit-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rc-book-edit-input {
+  width: 100%;
+  background: #181614;
+  border: 1px solid #2a2520;
+  border-radius: 6px;
+  color: #e8e4df;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.rc-book-edit-input:focus {
+  border-color: #6b8f71;
+}
+
+.rc-book-edit-input::placeholder {
+  color: #4a4540;
+}
+
+.rc-book-edit-search {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.rc-book-search-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.rc-book-search-btn,
+.rc-book-ocr-btn {
+  background: #2a2520;
+  color: #a89f91;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.rc-book-search-btn:hover,
+.rc-book-ocr-btn:hover {
+  background: #3a3530;
+  color: #e8e4df;
+}
+
+.rc-book-search-btn:disabled,
+.rc-book-ocr-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.rc-book-ocr-btn {
+  background: #2b4a3e;
+  color: #7ba381;
+}
+
+.rc-book-ocr-btn:hover {
+  background: #3a5a4e;
+}
+
+.rc-book-search-results {
+  max-height: 160px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rc-book-search-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.rc-book-search-item:hover {
+  background: #2a2520;
+}
+
+.rc-book-search-item-title {
+  font-family: 'Crimson Text', Georgia, serif;
+  font-size: 13px;
+  color: #e8e4df;
+  font-weight: 600;
+}
+
+.rc-book-search-item-author {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #6b6560;
+}
+
+.rc-book-edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
 /* ── Notes Tooltip ── */
 .rc-tooltip {
   position: fixed;
@@ -941,6 +1134,7 @@
   .rc-week-today .rc-week-day-num { font-size: 14px; }
   .rc-week-center-title { font-size: 10px; }
   .rc-notes-card { padding: 14px; }
+  .rc-view-tab { font-size: 11px; padding: 5px 12px; }
 }
 
 /* MOBILE */
@@ -994,6 +1188,9 @@
   .rc-notes-textarea { font-size: 14px; min-height: 80px; }
   .rc-notes-date { font-size: 10px; }
   .rc-month-header { flex-direction: column; gap: 8px; align-items: flex-start; }
+  .rc-view-tab { font-size: 10px; padding: 5px 10px; }
+  .rc-book-edit-search { flex-wrap: wrap; }
+  .rc-book-search-input { width: 100%; }
 }
 
 /* VERY SMALL PHONES */

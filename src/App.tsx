@@ -101,6 +101,17 @@ export default function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevUidRef = useRef<string | null | undefined>(undefined);
   const longPressRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [calendarView, setCalendarView] = useState<"week" | "biweek" | "month">(
+    "month",
+  );
+  const [bookEditMode, setBookEditMode] = useState(false);
+  const [bookEditTitle, setBookEditTitle] = useState("");
+  const [bookEditAuthor, setBookEditAuthor] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [bookSearchResults, setBookSearchResults] = useState<any[]>([]);
+  const [recognizing, setRecognizing] = useState(false);
+  const [searching, setSearching] = useState(false);
 
   // Reset data when user changes (login/logout/switch account)
   useEffect(() => {
@@ -120,7 +131,7 @@ export default function App() {
     // Reload data for the new user
     const base = generateInitialData(year, month);
     setDays(loadFromStorage(currentUid, year, month, base));
-    setModal(null);
+    closeModal();
     setEditingNotes(false);
   }, [user?.uid, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -175,7 +186,7 @@ export default function App() {
     const base = generateInitialData(ny, nm);
     setDays(loadFromStorage(user?.uid ?? null, ny, nm, base));
     setSelectedDay(null);
-    setModal(null);
+    closeModal();
   };
 
   const toggleRead = (day: number, e?: React.MouseEvent) => {
@@ -235,7 +246,7 @@ export default function App() {
           image: compressed,
         },
       }));
-      setModal(null);
+      closeModal();
     }
     e.target.value = "";
   };
@@ -313,6 +324,124 @@ export default function App() {
   const bookTouchEnd = () => {
     hideTooltip();
   };
+
+  // Close modal and reset edit state
+  const closeModal = () => {
+    setModal(null);
+    setBookEditMode(false);
+    setBookSearchResults([]);
+    setSearchQuery("");
+  };
+
+  // Open book edit mode
+  const openBookEdit = (day: number) => {
+    setBookEditTitle(days[day].book.title);
+    setBookEditAuthor(days[day].book.author || "");
+    setSearchQuery(days[day].book.title);
+    setBookSearchResults([]);
+    setBookEditMode(true);
+  };
+
+  // Save manual book edit
+  const saveBookEdit = (day: number) => {
+    setDays((prev) => ({
+      ...prev,
+      [day]: {
+        ...prev[day],
+        book: {
+          ...prev[day].book,
+          title: bookEditTitle || prev[day].book.title,
+          author: bookEditAuthor,
+        },
+      },
+    }));
+    setBookEditMode(false);
+    setBookSearchResults([]);
+    setSearchQuery("");
+  };
+
+  // Google Books search
+  const searchGoogleBooks = async (query: string) => {
+    if (!query.trim()) return;
+    setSearching(true);
+    try {
+      const resp = await fetch(
+        `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=5`,
+      );
+      const data = await resp.json();
+      setBookSearchResults(data.items || []);
+    } catch {
+      setBookSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  // OCR recognize from uploaded cover image
+  const recognizeFromImage = async (day: number) => {
+    const img = days[day]?.image;
+    if (!img) return;
+    setRecognizing(true);
+    try {
+      const { createWorker } = await import("tesseract.js");
+      const worker = await createWorker("eng");
+      const {
+        data: { text },
+      } = await worker.recognize(img);
+      await worker.terminate();
+      const firstLine = text.trim().split("\n")[0]?.trim() || "";
+      if (firstLine) {
+        setSearchQuery(firstLine);
+        await searchGoogleBooks(firstLine);
+      }
+    } catch (err) {
+      console.error("OCR failed:", err);
+    } finally {
+      setRecognizing(false);
+    }
+  };
+
+  // Apply a Google Books result
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const applyBookResult = (day: number, item: any) => {
+    const info = item.volumeInfo;
+    setDays((prev) => ({
+      ...prev,
+      [day]: {
+        ...prev[day],
+        book: {
+          ...prev[day].book,
+          title: info.title || prev[day].book.title,
+          author: info.authors?.[0] || "",
+          description: info.description?.slice(0, 200) || "",
+        },
+      },
+    }));
+    setBookEditMode(false);
+    setBookSearchResults([]);
+    setSearchQuery("");
+  };
+
+  // Compute visible days for the calendar grid
+  const computeVisibleDays = (): (number | null)[] => {
+    if (calendarView === "month") {
+      return [
+        ...Array(firstDayOfWeek).fill(null),
+        ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+      ];
+    }
+    const anchorDay = isCurrentMonth ? todayDayNum : 1;
+    const anchorDate = new Date(year, month, anchorDay);
+    const sundayDayNum = anchorDay - anchorDate.getDay();
+    const numDays = calendarView === "week" ? 7 : 14;
+    const result: (number | null)[] = [];
+    for (let i = 0; i < numDays; i++) {
+      const d = sundayDayNum + i;
+      result.push(d >= 1 && d <= daysInMonth ? d : null);
+    }
+    return result;
+  };
+  const visibleDays = computeVisibleDays();
 
   // Loading state
   if (authLoading) {
@@ -525,6 +654,28 @@ export default function App() {
             </div>
           </div>
 
+          {/* View Tabs */}
+          <div className="rc-view-tabs">
+            <button
+              className={`rc-view-tab${calendarView === "week" ? " active" : ""}`}
+              onClick={() => setCalendarView("week")}
+            >
+              {"一週"}
+            </button>
+            <button
+              className={`rc-view-tab${calendarView === "biweek" ? " active" : ""}`}
+              onClick={() => setCalendarView("biweek")}
+            >
+              {"雙週"}
+            </button>
+            <button
+              className={`rc-view-tab${calendarView === "month" ? " active" : ""}`}
+              onClick={() => setCalendarView("month")}
+            >
+              {"每月"}
+            </button>
+          </div>
+
           {/* Day headers */}
           <div className="rc-day-headers">
             {DAY_NAMES_FULL.map((d, i) => (
@@ -536,12 +687,11 @@ export default function App() {
           </div>
 
           {/* Grid */}
-          <div className="rc-grid">
-            {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-              <div key={`e-${i}`} className="rc-cell-empty" />
-            ))}
-            {Array.from({ length: daysInMonth }).map((_, i) => {
-              const day = i + 1;
+          <div className={`rc-grid${calendarView !== "month" ? " rc-grid-compact" : ""}`}>
+            {visibleDays.map((day, i) => {
+              if (day === null) {
+                return <div key={`e-${i}`} className="rc-cell-empty" />;
+              }
               const d = days[day];
               if (!d) return null;
               return (
@@ -621,7 +771,7 @@ export default function App() {
 
       {/* Modal */}
       {modal && days[modal] && (
-        <div className="rc-modal-backdrop" onClick={() => setModal(null)}>
+        <div className="rc-modal-backdrop" onClick={closeModal}>
           <div className="rc-modal" onClick={(e) => e.stopPropagation()}>
             <div className="rc-modal-header">
               <div className="rc-modal-title">
@@ -634,19 +784,129 @@ export default function App() {
                   </span>
                 )}
               </div>
-              <button
-                className="rc-modal-close"
-                onClick={() => setModal(null)}
-              >
+              <button className="rc-modal-close" onClick={closeModal}>
                 {"×"}
               </button>
             </div>
             <div className="rc-modal-cover">
               <BookCover book={days[modal].book} image={days[modal].image} />
             </div>
-            <div className="rc-modal-book-name">
-              {days[modal].book.emoji} {days[modal].book.title}
+
+            {/* Book Info */}
+            <div className="rc-modal-book-info">
+              <div className="rc-modal-book-name">
+                {days[modal].book.emoji} {days[modal].book.title}
+              </div>
+              {days[modal].book.author && (
+                <div className="rc-modal-book-author">
+                  {days[modal].book.author}
+                </div>
+              )}
+              {!bookEditMode && (
+                <button
+                  className="rc-modal-edit-book-btn"
+                  onClick={() => openBookEdit(modal)}
+                >
+                  {"✏️ 編輯書籍資訊"}
+                </button>
+              )}
             </div>
+
+            {/* Book Edit Panel */}
+            {bookEditMode && (
+              <div className="rc-book-edit-panel">
+                <div className="rc-book-edit-fields">
+                  <input
+                    className="rc-book-edit-input"
+                    value={bookEditTitle}
+                    onChange={(e) => setBookEditTitle(e.target.value)}
+                    placeholder="書名"
+                  />
+                  <input
+                    className="rc-book-edit-input"
+                    value={bookEditAuthor}
+                    onChange={(e) => setBookEditAuthor(e.target.value)}
+                    placeholder="作者"
+                  />
+                </div>
+                <div className="rc-book-edit-search">
+                  <input
+                    className="rc-book-edit-input rc-book-search-input"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="搜尋書名..."
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && searchGoogleBooks(searchQuery)
+                    }
+                  />
+                  <button
+                    className="rc-book-search-btn"
+                    onClick={() => searchGoogleBooks(searchQuery)}
+                    disabled={searching}
+                  >
+                    {searching ? "..." : "搜尋"}
+                  </button>
+                  {days[modal].image && (
+                    <button
+                      className="rc-book-ocr-btn"
+                      onClick={() => recognizeFromImage(modal)}
+                      disabled={recognizing}
+                    >
+                      {recognizing ? "辨識中..." : "圖片辨識"}
+                    </button>
+                  )}
+                </div>
+                {bookSearchResults.length > 0 && (
+                  <div className="rc-book-search-results">
+                    {bookSearchResults.map(
+                      (
+                        item: {
+                          id: string;
+                          volumeInfo: {
+                            title?: string;
+                            authors?: string[];
+                          };
+                        },
+                        idx: number,
+                      ) => (
+                        <div
+                          key={item.id || idx}
+                          className="rc-book-search-item"
+                          onClick={() => applyBookResult(modal, item)}
+                        >
+                          <span className="rc-book-search-item-title">
+                            {item.volumeInfo.title}
+                          </span>
+                          {item.volumeInfo.authors && (
+                            <span className="rc-book-search-item-author">
+                              {item.volumeInfo.authors[0]}
+                            </span>
+                          )}
+                        </div>
+                      ),
+                    )}
+                  </div>
+                )}
+                <div className="rc-book-edit-actions">
+                  <button
+                    className="rc-notes-save-btn"
+                    onClick={() => saveBookEdit(modal)}
+                  >
+                    {"儲存"}
+                  </button>
+                  <button
+                    className="rc-notes-cancel-btn"
+                    onClick={() => {
+                      setBookEditMode(false);
+                      setBookSearchResults([]);
+                    }}
+                  >
+                    {"取消"}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="rc-modal-actions">
               <button
                 className="rc-modal-btn rc-btn-upload"
