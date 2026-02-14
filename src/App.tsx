@@ -586,7 +586,7 @@ export default function App() {
                         ) : (
                           <div className="rc-carousel-placeholder" />
                         )}
-                        {wd.isToday && d?.notes && (
+                        {d?.notes && (
                           <div className="rc-carousel-notes-overlay">
                             <p>{d.notes}</p>
                           </div>
