@@ -224,12 +224,77 @@
   margin: 0;
 }
 
-/* ── This Week Strip (centered on today) ── */
+/* ── This Week Strip ── */
+.rc-week-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.rc-week-header .rc-section-title {
+  margin: 0;
+}
+
+.rc-week-reset {
+  background: none;
+  border: 1px solid #2a2520;
+  color: #6b8f71;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.rc-week-reset:hover {
+  border-color: #6b8f71;
+  background: #1a1f1a;
+}
+
+.rc-week-nav-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rc-week-nav-btn {
+  background: #181614;
+  border: 1px solid #2a2520;
+  color: #a89f91;
+  font-size: 22px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  line-height: 1;
+  padding: 0;
+}
+
+.rc-week-nav-btn:hover {
+  border-color: #6b8f71;
+  color: #6b8f71;
+  background: #1a1f1a;
+}
+
+.rc-week-nav-btn:active {
+  transform: scale(0.92);
+}
+
 .rc-week-strip {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1.6fr 1fr 1fr 1fr;
   gap: 6px;
   align-items: end;
+  flex: 1;
+  min-width: 0;
+  touch-action: pan-y;
 }
 
 .rc-week-card {
@@ -251,11 +316,14 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+.rc-week-center {
+  padding: 10px 6px;
+  border-radius: 12px;
+}
+
 .rc-week-today {
   background: #1a1f1a;
   border: 1.5px solid #6b8f71;
-  padding: 10px 6px;
-  border-radius: 12px;
   box-shadow: 0 0 16px rgba(107, 143, 113, 0.15);
 }
 
@@ -287,6 +355,10 @@
   font-size: 11px;
 }
 
+.rc-week-center .rc-week-day-label {
+  font-size: 11px;
+}
+
 .rc-week-day-num {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
@@ -294,10 +366,13 @@
   font-weight: 500;
 }
 
-.rc-week-today .rc-week-day-num {
-  color: #6b8f71;
+.rc-week-center .rc-week-day-num {
   font-weight: 700;
   font-size: 16px;
+}
+
+.rc-week-today .rc-week-day-num {
+  color: #6b8f71;
 }
 
 .rc-week-book {
@@ -1183,8 +1258,9 @@
   .rc-week-strip { gap: 4px; }
   .rc-week-card { padding: 6px 3px; border-radius: 8px; }
   .rc-week-day-num { font-size: 11px; }
-  .rc-week-today .rc-week-day-num { font-size: 14px; }
+  .rc-week-center .rc-week-day-num { font-size: 14px; }
   .rc-week-center-title { font-size: 10px; }
+  .rc-week-nav-btn { width: 28px; height: 28px; font-size: 18px; }
   .rc-notes-card { padding: 14px; }
   .rc-view-tab { font-size: 11px; padding: 5px 12px; }
 }
@@ -1229,12 +1305,15 @@
   .rc-section-title { font-size: 13px; margin-bottom: 10px; }
   .rc-week-strip { gap: 3px; grid-template-columns: 1fr 1fr 1fr 1.5fr 1fr 1fr 1fr; }
   .rc-week-card { padding: 5px 2px; border-radius: 6px; gap: 3px; }
-  .rc-week-today { padding: 6px 3px; }
+  .rc-week-center { padding: 6px 3px; }
   .rc-week-day-label { font-size: 9px; }
   .rc-week-day-num { font-size: 10px; }
-  .rc-week-today .rc-week-day-num { font-size: 12px; }
+  .rc-week-center .rc-week-day-num { font-size: 12px; }
   .rc-week-status { width: 14px; height: 14px; font-size: 7px; }
   .rc-week-center-title { font-size: 8px; -webkit-line-clamp: 1; }
+  .rc-week-nav-btn { width: 24px; height: 24px; font-size: 16px; }
+  .rc-week-nav-wrapper { gap: 4px; }
+  .rc-week-reset { font-size: 9px; padding: 2px 8px; }
   .rc-notes-card { padding: 12px; border-radius: 10px; }
   .rc-notes-display { font-size: 14px; padding: 6px; }
   .rc-notes-textarea { font-size: 14px; min-height: 80px; }
@@ -1259,11 +1338,13 @@
   .rc-check { width: 12px; height: 12px; font-size: 6px; }
   .rc-legend { font-size: 8px; gap: 8px; }
   .rc-week-card { padding: 4px 2px; }
-  .rc-week-today { padding: 5px 2px; }
+  .rc-week-center { padding: 5px 2px; }
   .rc-week-day-label { font-size: 8px; }
   .rc-week-day-num { font-size: 9px; }
-  .rc-week-today .rc-week-day-num { font-size: 10px; }
+  .rc-week-center .rc-week-day-num { font-size: 10px; }
   .rc-week-center-title { display: none; }
+  .rc-week-nav-btn { width: 20px; height: 20px; font-size: 14px; }
+  .rc-week-nav-wrapper { gap: 2px; }
   .rc-notes-card { padding: 10px; }
   .rc-notes-display { font-size: 13px; }
 }

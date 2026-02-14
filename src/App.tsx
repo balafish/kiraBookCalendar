@@ -115,6 +115,8 @@ export default function App() {
   const [bookSearchResults, setBookSearchResults] = useState<any[]>([]);
   const [recognizing, setRecognizing] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const weekTouchRef = useRef<{ startX: number; startY: number } | null>(null);
 
   // Reset data when user changes (login/logout/switch account)
   useEffect(() => {
@@ -274,7 +276,7 @@ export default function App() {
   const totalCount = Object.keys(days).length;
   const progress = Math.round((readCount / totalCount) * 100);
 
-  // Compute week centered on today: 3 days before | TODAY | 3 days after
+  // Compute week centered on today + offset
   const isCurrentMonth =
     year === now.getFullYear() && month === now.getMonth();
   const todayDayNum = now.getDate();
@@ -285,16 +287,18 @@ export default function App() {
     dayOfWeek: number;
     inMonth: boolean;
     isCenter: boolean;
+    isToday: boolean;
   }[] = [];
   for (let i = -3; i <= 3; i++) {
     const d = new Date(now);
-    d.setDate(now.getDate() + i);
+    d.setDate(now.getDate() + weekOffset + i);
     weekDays.push({
       date: d,
       dayNum: d.getDate(),
       dayOfWeek: d.getDay(),
       inMonth: d.getFullYear() === year && d.getMonth() === month,
       isCenter: i === 0,
+      isToday: weekOffset + i === 0,
     });
   }
 
@@ -531,64 +535,100 @@ export default function App() {
           </div>
         </div>
 
-        {/* === This Week Section (centered on today) === */}
+        {/* === This Week Section (centered on today + offset) === */}
         {isCurrentMonth && (
           <section className="rc-section">
-            <h2 className="rc-section-title">{"本週書單"}</h2>
-            <div className="rc-week-strip">
-              {weekDays.map((wd, idx) => {
-                const d = wd.inMonth ? days[wd.dayNum] : null;
-                return (
-                  <div
-                    key={idx}
-                    className={`rc-week-card${wd.isCenter ? " rc-week-today" : ""}${!wd.inMonth ? " rc-week-outside" : ""}`}
-                    onClick={() => wd.inMonth && d && setModal(wd.dayNum)}
-                  >
-                    <div className="rc-week-day-label">
-                      {DAY_NAMES_SHORT[wd.dayOfWeek]}
-                    </div>
-                    <div className="rc-week-day-num">{wd.dayNum}</div>
+            <div className="rc-week-header">
+              <h2 className="rc-section-title">{"本週書單"}</h2>
+              {weekOffset !== 0 && (
+                <button
+                  className="rc-week-reset"
+                  onClick={() => setWeekOffset(0)}
+                >
+                  {"回到今天"}
+                </button>
+              )}
+            </div>
+            <div className="rc-week-nav-wrapper">
+              <button
+                className="rc-week-nav-btn rc-week-nav-prev"
+                onClick={() => setWeekOffset((o) => o - 1)}
+              >
+                {"‹"}
+              </button>
+              <div
+                className="rc-week-strip"
+                onTouchStart={(e) => {
+                  weekTouchRef.current = {
+                    startX: e.touches[0].clientX,
+                    startY: e.touches[0].clientY,
+                  };
+                }}
+                onTouchEnd={(e) => {
+                  if (!weekTouchRef.current) return;
+                  const dx = e.changedTouches[0].clientX - weekTouchRef.current.startX;
+                  const dy = e.changedTouches[0].clientY - weekTouchRef.current.startY;
+                  weekTouchRef.current = null;
+                  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+                    setWeekOffset((o) => o + (dx < 0 ? 1 : -1));
+                  }
+                }}
+              >
+                {weekDays.map((wd, idx) => {
+                  const d = wd.inMonth ? days[wd.dayNum] : null;
+                  return (
                     <div
-                      className="rc-week-book"
-                      onMouseEnter={(e) =>
-                        wd.inMonth && d && bookMouseEnter(wd.dayNum, e)
-                      }
-                      onMouseLeave={hideTooltip}
-                      onTouchStart={(e) =>
-                        wd.inMonth && d && bookTouchStart(wd.dayNum, e)
-                      }
-                      onTouchEnd={bookTouchEnd}
-                      onTouchCancel={bookTouchEnd}
+                      key={idx}
+                      className={`rc-week-card${wd.isCenter ? " rc-week-center" : ""}${wd.isToday ? " rc-week-today" : ""}${!wd.inMonth ? " rc-week-outside" : ""}`}
+                      onClick={() => wd.inMonth && d && setModal(wd.dayNum)}
                     >
-                      {d ? (
-                        <>
-                          <BookCover book={d.book} image={d.image} />
-                          {d.favorite && (
-                            <span className="rc-badge-fav">{"♥"}</span>
-                          )}
-                          {d.read && (
-                            <span className="rc-badge-read">{"✓"}</span>
-                          )}
-                        </>
-                      ) : (
-                        <div className="rc-week-book-placeholder" />
+                      <div className="rc-week-day-label">
+                        {DAY_NAMES_SHORT[wd.dayOfWeek]}
+                      </div>
+                      <div className="rc-week-day-num">{wd.dayNum}</div>
+                      <div
+                        className="rc-week-book"
+                        onMouseEnter={(e) =>
+                          wd.inMonth && d && bookMouseEnter(wd.dayNum, e)
+                        }
+                        onMouseLeave={hideTooltip}
+                      >
+                        {d ? (
+                          <>
+                            <BookCover book={d.book} image={d.image} />
+                            {d.favorite && (
+                              <span className="rc-badge-fav">{"♥"}</span>
+                            )}
+                            {d.read && (
+                              <span className="rc-badge-read">{"✓"}</span>
+                            )}
+                          </>
+                        ) : (
+                          <div className="rc-week-book-placeholder" />
+                        )}
+                      </div>
+                      {wd.isCenter && d && (
+                        <div className="rc-week-center-title">
+                          {d.book.title}
+                        </div>
+                      )}
+                      {d && (
+                        <div
+                          className={`rc-week-status ${d.read ? "read" : "unread"}`}
+                        >
+                          {d.read ? "✓" : ""}
+                        </div>
                       )}
                     </div>
-                    {wd.isCenter && d && (
-                      <div className="rc-week-center-title">
-                        {d.book.title}
-                      </div>
-                    )}
-                    {d && (
-                      <div
-                        className={`rc-week-status ${d.read ? "read" : "unread"}`}
-                      >
-                        {d.read ? "✓" : ""}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+              <button
+                className="rc-week-nav-btn rc-week-nav-next"
+                onClick={() => setWeekOffset((o) => o + 1)}
+              >
+                {"›"}
+              </button>
             </div>
           </section>
         )}
