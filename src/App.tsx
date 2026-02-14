@@ -15,6 +15,7 @@ function storageKey(uid: string | null, y: number, m: number) {
 type SavedDay = {
   image: string | null;
   read: boolean;
+  favorite?: boolean;
   notes?: string;
   book?: { title: string; author?: string; description?: string; emoji: string; color: string };
 };
@@ -27,10 +28,11 @@ function saveToStorage(
 ) {
   const toSave: Record<number, SavedDay> = {};
   for (const [k, v] of Object.entries(days)) {
-    if (v.image || v.read || v.notes || v.book.author || v.book.description) {
+    if (v.image || v.read || v.favorite || v.notes || v.book.author || v.book.description) {
       toSave[Number(k)] = {
         image: v.image,
         read: v.read,
+        favorite: v.favorite || false,
         notes: v.notes || "",
         book: {
           title: v.book.title,
@@ -67,6 +69,7 @@ function loadFromStorage(
           ...result[day],
           image: v.image,
           read: v.read,
+          favorite: v.favorite || false,
           notes: v.notes || "",
           book: v.book
             ? { ...result[day].book, ...v.book }
@@ -152,6 +155,7 @@ export default function App() {
               ...result[day],
               image: v.image,
               read: v.read,
+              favorite: v.favorite || false,
               notes: v.notes || "",
               book: v.book
                 ? { ...result[day].book, ...v.book }
@@ -194,6 +198,14 @@ export default function App() {
     setDays((prev) => ({
       ...prev,
       [day]: { ...prev[day], read: !prev[day].read },
+    }));
+  };
+
+  const toggleFavorite = (day: number, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setDays((prev) => ({
+      ...prev,
+      [day]: { ...prev[day], favorite: !prev[day].favorite },
     }));
   };
 
@@ -549,7 +561,15 @@ export default function App() {
                       onTouchCancel={bookTouchEnd}
                     >
                       {d ? (
-                        <BookCover book={d.book} image={d.image} />
+                        <>
+                          <BookCover book={d.book} image={d.image} />
+                          {d.favorite && (
+                            <span className="rc-badge-fav">{"♥"}</span>
+                          )}
+                          {d.read && (
+                            <span className="rc-badge-read">{"✓"}</span>
+                          )}
+                        </>
                       ) : (
                         <div className="rc-week-book-placeholder" />
                       )}
@@ -723,6 +743,12 @@ export default function App() {
                     onTouchCancel={bookTouchEnd}
                   >
                     <BookCover book={d.book} image={d.image} />
+                    {d.favorite && (
+                      <span className="rc-badge-fav">{"♥"}</span>
+                    )}
+                    {d.read && (
+                      <span className="rc-badge-read">{"✓"}</span>
+                    )}
                   </div>
                   <div className="rc-hover-overlay">{"📷"}</div>
                 </div>
@@ -919,6 +945,14 @@ export default function App() {
                 onClick={() => toggleRead(modal)}
               >
                 {days[modal].read ? "↩ 標記為未讀" : "✓ 標記為已讀"}
+              </button>
+              <button
+                className={`rc-modal-btn rc-btn-fav${days[modal].favorite ? " active" : ""}`}
+                onClick={() => toggleFavorite(modal)}
+              >
+                {days[modal].favorite
+                  ? "♥ 取消最愛"
+                  : "♡ 加入最愛"}
               </button>
               {days[modal].image && (
                 <button

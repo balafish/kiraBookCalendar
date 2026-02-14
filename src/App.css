@@ -731,6 +731,43 @@
   color: #fff;
 }
 
+/* ── Cover Badges (read ✓ / favorite ♥) ── */
+.rc-cell-book,
+.rc-week-book {
+  position: relative;
+}
+
+.rc-badge-read {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #6b8f71;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.rc-badge-fav {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  font-size: 14px;
+  color: #e05566;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+  pointer-events: none;
+  z-index: 2;
+  line-height: 1;
+}
+
 /* ── View Tabs ── */
 .rc-view-tabs {
   display: flex;
@@ -1100,6 +1137,21 @@
   background: #3a3530;
 }
 
+.rc-btn-fav {
+  background: #2a2520;
+  color: #a89f91;
+}
+
+.rc-btn-fav:hover {
+  background: #3a2525;
+  color: #e05566;
+}
+
+.rc-btn-fav.active {
+  background: #3a2020;
+  color: #e05566;
+}
+
 .rc-btn-clear {
   background: transparent;
   color: #8b5e5e;
@@ -1191,6 +1243,8 @@
   .rc-view-tab { font-size: 10px; padding: 5px 10px; }
   .rc-book-edit-search { flex-wrap: wrap; }
   .rc-book-search-input { width: 100%; }
+  .rc-badge-read { width: 14px; height: 14px; font-size: 8px; bottom: 2px; right: 2px; }
+  .rc-badge-fav { font-size: 10px; top: 2px; right: 2px; }
 }
 
 /* VERY SMALL PHONES */

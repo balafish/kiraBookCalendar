@@ -7,6 +7,7 @@ import type { User } from "firebase/auth";
 type SavedDay = {
   image: string | null;
   read: boolean;
+  favorite?: boolean;
   notes?: string;
   book?: { title: string; author?: string; description?: string; emoji: string; color: string };
 };
@@ -19,10 +20,11 @@ function docPath(uid: string, y: number, m: number) {
 function extractSaveData(days: DaysMap): SavedData {
   const data: SavedData = {};
   for (const [k, v] of Object.entries(days)) {
-    if (v.image || v.read || v.notes || v.book.author || v.book.description) {
+    if (v.image || v.read || v.favorite || v.notes || v.book.author || v.book.description) {
       const entry: SavedDay = {
         image: v.image,
         read: v.read,
+        favorite: v.favorite || false,
         notes: v.notes || "",
         book: {
           title: v.book.title,

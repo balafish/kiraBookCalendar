@@ -17,6 +17,7 @@ export function generateInitialData(year: number, month: number): DaysMap {
       book,
       image: null,
       read: false,
+      favorite: false,
       isToday,
       notes: "",
     };
