@@ -11,6 +11,50 @@
   margin: 0 auto;
 }
 
+/* Auth bar */
+.rc-auth-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+  min-height: 32px;
+}
+
+.rc-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.rc-auth-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #6b6560;
+}
+
+.rc-auth-btn {
+  background: none;
+  border: 1px solid #2a2520;
+  color: #a89f91;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rc-auth-btn:hover {
+  border-color: #6b8f71;
+  color: #6b8f71;
+}
+
+.rc-auth-login {
+  border-color: #6b8f71;
+  color: #6b8f71;
+}
+
 /* Header */
 .rc-header {
   display: flex;

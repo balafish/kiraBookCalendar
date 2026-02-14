@@ -1,7 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import BookCover from "./components/BookCover";
 import { MONTH_NAMES, DAY_NAMES_FULL, DAY_NAMES_SHORT } from "./data/books";
 import { generateInitialData } from "./data/calendar";
+import { useAuth } from "./hooks/useAuth";
+import { useCloudStorage } from "./hooks/useCloudStorage";
 import type { DaysMap } from "./types";
 import "./App.css";
 
@@ -44,6 +46,7 @@ function loadFromStorage(y: number, m: number, base: DaysMap): DaysMap {
 
 export default function App() {
   const now = new Date();
+  const { user, loading: authLoading, login, logout } = useAuth();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [days, setDays] = useState(() => {
@@ -54,9 +57,29 @@ export default function App() {
   const [modal, setModal] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // localStorage persistence
   useEffect(() => {
     saveToStorage(year, month, days);
   }, [days, year, month]);
+
+  // Cloud sync: apply data from Firestore when loaded
+  const applyCloud = useCallback(
+    (saved: Record<number, { image: string | null; read: boolean }>) => {
+      setDays((prev) => {
+        const result = { ...prev };
+        for (const [k, v] of Object.entries(saved)) {
+          const day = Number(k);
+          if (result[day]) {
+            result[day] = { ...result[day], image: v.image, read: v.read };
+          }
+        }
+        return result;
+      });
+    },
+    [],
+  );
+
+  useCloudStorage(user, year, month, days, applyCloud);
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, month, 1).getDay();
@@ -133,6 +156,28 @@ export default function App() {
         style={{ display: "none" }}
       />
       <div className="rc-container">
+        {/* Auth bar */}
+        <div className="rc-auth-bar">
+          {authLoading ? null : user ? (
+            <>
+              <img
+                src={user.photoURL || undefined}
+                alt=""
+                className="rc-avatar"
+                referrerPolicy="no-referrer"
+              />
+              <span className="rc-auth-name">{user.displayName}</span>
+              <button className="rc-auth-btn" onClick={logout}>
+                登出
+              </button>
+            </>
+          ) : (
+            <button className="rc-auth-btn rc-auth-login" onClick={login}>
+              Google 登入（雲端同步）
+            </button>
+          )}
+        </div>
+
         {/* Header */}
         <div className="rc-header">
           <div>
