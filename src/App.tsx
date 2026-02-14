@@ -421,6 +421,7 @@ export default function App() {
       await worker.terminate();
       const firstLine = text.trim().split("\n")[0]?.trim() || "";
       if (firstLine) {
+        setBookEditTitle(firstLine);
         setSearchQuery(firstLine);
         await searchGoogleBooks(firstLine);
       }
