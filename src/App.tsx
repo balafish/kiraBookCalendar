@@ -301,6 +301,33 @@ export default function App() {
     hideTooltip();
   };
 
+  // Loading state
+  if (authLoading) {
+    return (
+      <div className="rc-root">
+        <div className="rc-login-screen">
+          <div className="rc-login-loading">載入中...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Login gate — must sign in before using the app
+  if (!user) {
+    return (
+      <div className="rc-root">
+        <div className="rc-login-screen">
+          <h1 className="rc-login-title">{"📚 Kira 愛讀冊"}</h1>
+          <p className="rc-login-subtitle">{"每日一書 · track your daily reads"}</p>
+          <button className="rc-login-btn" onClick={login}>
+            Google 帳號登入
+          </button>
+          <p className="rc-login-hint">登入後即可使用所有功能並同步資料</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rc-root">
       <input
@@ -313,24 +340,16 @@ export default function App() {
       <div className="rc-container">
         {/* Auth bar */}
         <div className="rc-auth-bar">
-          {authLoading ? null : user ? (
-            <>
-              <img
-                src={user.photoURL || undefined}
-                alt=""
-                className="rc-avatar"
-                referrerPolicy="no-referrer"
-              />
-              <span className="rc-auth-name">{user.displayName}</span>
-              <button className="rc-auth-btn" onClick={logout}>
-                登出
-              </button>
-            </>
-          ) : (
-            <button className="rc-auth-btn rc-auth-login" onClick={login}>
-              Google 登入（雲端同步）
-            </button>
-          )}
+          <img
+            src={user.photoURL || undefined}
+            alt=""
+            className="rc-avatar"
+            referrerPolicy="no-referrer"
+          />
+          <span className="rc-auth-name">{user.displayName}</span>
+          <button className="rc-auth-btn" onClick={logout}>
+            登出
+          </button>
         </div>
 
         {/* Header */}

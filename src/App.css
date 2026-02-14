@@ -11,6 +11,71 @@
   margin: 0 auto;
 }
 
+/* ── Login Screen ── */
+.rc-login-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 48px);
+  text-align: center;
+  gap: 16px;
+}
+
+.rc-login-title {
+  font-size: 36px;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(135deg, #e8e4df, #a89f91);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.rc-login-subtitle {
+  font-size: 14px;
+  color: #6b6560;
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+}
+
+.rc-login-btn {
+  margin-top: 12px;
+  background: #6b8f71;
+  color: #fff;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 10px;
+  font-family: 'Crimson Text', Georgia, serif;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rc-login-btn:hover {
+  background: #7ba381;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(107, 143, 113, 0.3);
+}
+
+.rc-login-btn:active {
+  transform: scale(0.97);
+}
+
+.rc-login-hint {
+  font-size: 12px;
+  color: #4a4540;
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.rc-login-loading {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: #6b6560;
+}
+
 /* Auth bar */
 .rc-auth-bar {
   display: flex;
