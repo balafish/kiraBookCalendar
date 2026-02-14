@@ -12,22 +12,33 @@ function storageKey(uid: string | null, y: number, m: number) {
   return `kira-calendar-${prefix}-${y}-${m}`;
 }
 
+type SavedDay = {
+  image: string | null;
+  read: boolean;
+  notes?: string;
+  book?: { title: string; author?: string; description?: string; emoji: string; color: string };
+};
+
 function saveToStorage(
   uid: string | null,
   y: number,
   m: number,
   days: DaysMap,
 ) {
-  const toSave: Record<
-    number,
-    { image: string | null; read: boolean; notes?: string }
-  > = {};
+  const toSave: Record<number, SavedDay> = {};
   for (const [k, v] of Object.entries(days)) {
-    if (v.image || v.read || v.notes) {
+    if (v.image || v.read || v.notes || v.book.author || v.book.description) {
       toSave[Number(k)] = {
         image: v.image,
         read: v.read,
         notes: v.notes || "",
+        book: {
+          title: v.book.title,
+          author: v.book.author,
+          description: v.book.description,
+          emoji: v.book.emoji,
+          color: v.book.color,
+        },
       };
     }
   }
@@ -47,10 +58,7 @@ function loadFromStorage(
   const raw = localStorage.getItem(storageKey(uid, y, m));
   if (!raw) return base;
   try {
-    const saved: Record<
-      number,
-      { image: string | null; read: boolean; notes?: string }
-    > = JSON.parse(raw);
+    const saved: Record<number, SavedDay> = JSON.parse(raw);
     const result = { ...base };
     for (const [k, v] of Object.entries(saved)) {
       const day = Number(k);
@@ -60,6 +68,9 @@ function loadFromStorage(
           image: v.image,
           read: v.read,
           notes: v.notes || "",
+          book: v.book
+            ? { ...result[day].book, ...v.book }
+            : result[day].book,
         };
       }
     }
@@ -96,8 +107,12 @@ export default function App() {
     if (authLoading) return;
     const currentUid = user?.uid ?? null;
     if (prevUidRef.current === undefined) {
-      // First load — just record the uid
+      // First load — record uid AND load user-specific data
       prevUidRef.current = currentUid;
+      if (currentUid) {
+        const base = generateInitialData(year, month);
+        setDays(loadFromStorage(currentUid, year, month, base));
+      }
       return;
     }
     if (prevUidRef.current === currentUid) return;
@@ -116,12 +131,7 @@ export default function App() {
 
   // Cloud sync: apply data from Firestore when loaded
   const applyCloud = useCallback(
-    (
-      saved: Record<
-        number,
-        { image: string | null; read: boolean; notes?: string }
-      >,
-    ) => {
+    (saved: Record<number, SavedDay>) => {
       setDays((prev) => {
         const result = { ...prev };
         for (const [k, v] of Object.entries(saved)) {
@@ -132,6 +142,9 @@ export default function App() {
               image: v.image,
               read: v.read,
               notes: v.notes || "",
+              book: v.book
+                ? { ...result[day].book, ...v.book }
+                : result[day].book,
             };
           }
         }
