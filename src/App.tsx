@@ -117,7 +117,7 @@ export default function App() {
   const [searching, setSearching] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
   const weekTouchRef = useRef<{ startX: number; startY: number } | null>(null);
-  const [carouselExpanded, setCarouselExpanded] = useState(false);
+
 
   // Reset data when user changes (login/logout/switch account)
   useEffect(() => {
@@ -564,7 +564,7 @@ export default function App() {
             {weekOffset !== 0 && (
               <button
                 className="rc-carousel-reset"
-                onClick={() => { setWeekOffset(0); setCarouselExpanded(false); }}
+                onClick={() => setWeekOffset(0)}
               >
                 {"回到今天"}
               </button>
@@ -586,7 +586,6 @@ export default function App() {
                 weekTouchRef.current = null;
                 if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
                   setWeekOffset((o) => o + (dx < 0 ? 1 : -1));
-                  setCarouselExpanded(false);
                 }
               }}
             >
@@ -601,12 +600,11 @@ export default function App() {
                       style={carouselTransform(wd.offset)}
                       onClick={() => {
                         if (wd.offset === 0) {
-                          // Center book: toggle info panel
-                          setCarouselExpanded((v) => !v);
+                          // Center book: open modal directly
+                          setModal(wd.dayNum);
                         } else {
                           // Side book: bring to center
                           setWeekOffset((o) => o + wd.offset);
-                          setCarouselExpanded(false);
                         }
                       }}
                     >
@@ -646,7 +644,6 @@ export default function App() {
                 onClick={(e) => {
                   e.stopPropagation();
                   setWeekOffset((o) => o - 1);
-                  setCarouselExpanded(false);
                 }}
               >
                 {"‹"}
@@ -656,7 +653,6 @@ export default function App() {
                 onClick={(e) => {
                   e.stopPropagation();
                   setWeekOffset((o) => o + 1);
-                  setCarouselExpanded(false);
                 }}
               >
                 {"›"}
@@ -671,37 +667,6 @@ export default function App() {
               </div>
             )}
 
-            {/* Expandable info panel */}
-            {carouselExpanded && centerDayData && (
-              <div className="rc-carousel-info-panel">
-                {centerDayData.book.author && (
-                  <div className="rc-info-author">{centerDayData.book.author}</div>
-                )}
-                {centerDayData.notes && (
-                  <div className="rc-info-notes">{centerDayData.notes}</div>
-                )}
-                <div className="rc-info-actions">
-                  <button
-                    className={`rc-info-action-btn${centerDayData.read ? " active" : ""}`}
-                    onClick={(e) => toggleRead(centerDay.dayNum, e)}
-                  >
-                    {centerDayData.read ? "✓ 已讀" : "✓ 標記已讀"}
-                  </button>
-                  <button
-                    className={`rc-info-action-btn rc-info-fav-btn${centerDayData.favorite ? " active" : ""}`}
-                    onClick={(e) => toggleFavorite(centerDay.dayNum, e)}
-                  >
-                    {centerDayData.favorite ? "♥ 已收藏" : "♡ 收藏"}
-                  </button>
-                  <button
-                    className="rc-info-action-btn rc-info-detail-btn"
-                    onClick={() => setModal(centerDay.dayNum)}
-                  >
-                    {"詳細"}
-                  </button>
-                </div>
-              </div>
-            )}
           </section>
         )}
 
@@ -868,8 +833,8 @@ export default function App() {
 
       {/* Modal */}
       {modal && days[modal] && (
-        <div className="rc-modal-backdrop" onClick={closeModal}>
-          <div className="rc-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="rc-modal-backdrop">
+          <div className="rc-modal">
             <div className="rc-modal-header">
               <div className="rc-modal-title">
                 {month + 1}月{modal}日

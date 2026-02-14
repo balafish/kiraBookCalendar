@@ -1161,15 +1161,10 @@
 .rc-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  background: #0e0d0c;
   z-index: 1000;
-  padding: 20px;
-  backdrop-filter: blur(4px);
-  animation: fadeIn 0.2s ease;
   overflow-y: auto;
+  animation: fadeIn 0.2s ease;
 }
 
 @keyframes fadeIn {
@@ -1183,18 +1178,14 @@
 }
 
 .rc-modal {
-  background: #1c1a17;
-  border-radius: 16px;
-  padding: 24px;
+  background: #0e0d0c;
+  min-height: 100%;
+  padding: 20px;
   width: 100%;
-  max-width: 360px;
-  border: 1px solid #2a2520;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-  animation: slideUp 0.25s ease;
+  max-width: 480px;
+  margin: 0 auto;
   box-sizing: border-box;
-  margin-top: auto;
-  margin-bottom: auto;
-  flex-shrink: 0;
+  animation: fadeIn 0.2s ease;
 }
 
 .rc-modal-header {
@@ -1210,25 +1201,27 @@
 }
 
 .rc-modal-close {
-  background: none;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  color: #6b6560;
-  font-size: 24px;
+  color: #e8e4df;
+  font-size: 28px;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 4px 12px;
   line-height: 1;
+  border-radius: 50%;
 }
 
 .rc-modal-close:hover {
-  color: #e8e4df;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .rc-modal-cover {
-  width: 100%;
+  width: 60%;
+  max-width: 240px;
   aspect-ratio: 3 / 4;
   border-radius: 10px;
   overflow: hidden;
-  margin-bottom: 16px;
+  margin: 0 auto 16px;
 }
 
 .rc-modal-book-name {
@@ -1376,7 +1369,7 @@
   .book-emoji { font-size: 13px; }
   .book-title { font-size: 6.5px; -webkit-line-clamp: 1; }
   .rc-legend { gap: 12px; font-size: 9px; margin-top: 12px; }
-  .rc-modal { padding: 20px; border-radius: 14px; max-width: 320px; }
+  .rc-modal { padding: 16px; }
   .rc-modal-title { font-size: 18px; }
   .rc-modal-btn { padding: 14px; font-size: 14px; }
   .rc-section { margin-bottom: 20px; }
