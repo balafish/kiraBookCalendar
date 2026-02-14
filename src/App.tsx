@@ -1,19 +1,62 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import BookCover from "./components/BookCover";
 import { MONTH_NAMES, DAY_NAMES_FULL, DAY_NAMES_SHORT } from "./data/books";
 import { generateInitialData } from "./data/calendar";
+import type { DaysMap } from "./types";
 import "./App.css";
+
+function storageKey(y: number, m: number) {
+  return `kira-calendar-${y}-${m}`;
+}
+
+function saveToStorage(y: number, m: number, days: DaysMap) {
+  const toSave: Record<number, { image: string | null; read: boolean }> = {};
+  for (const [k, v] of Object.entries(days)) {
+    if (v.image || v.read) {
+      toSave[Number(k)] = { image: v.image, read: v.read };
+    }
+  }
+  if (Object.keys(toSave).length > 0) {
+    localStorage.setItem(storageKey(y, m), JSON.stringify(toSave));
+  } else {
+    localStorage.removeItem(storageKey(y, m));
+  }
+}
+
+function loadFromStorage(y: number, m: number, base: DaysMap): DaysMap {
+  const raw = localStorage.getItem(storageKey(y, m));
+  if (!raw) return base;
+  try {
+    const saved: Record<number, { image: string | null; read: boolean }> =
+      JSON.parse(raw);
+    const result = { ...base };
+    for (const [k, v] of Object.entries(saved)) {
+      const day = Number(k);
+      if (result[day]) {
+        result[day] = { ...result[day], image: v.image, read: v.read };
+      }
+    }
+    return result;
+  } catch {
+    return base;
+  }
+}
 
 export default function App() {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
-  const [days, setDays] = useState(() =>
-    generateInitialData(now.getFullYear(), now.getMonth())
-  );
+  const [days, setDays] = useState(() => {
+    const base = generateInitialData(now.getFullYear(), now.getMonth());
+    return loadFromStorage(now.getFullYear(), now.getMonth(), base);
+  });
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [modal, setModal] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    saveToStorage(year, month, days);
+  }, [days, year, month]);
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, month, 1).getDay();
@@ -31,7 +74,8 @@ export default function App() {
     }
     setYear(ny);
     setMonth(nm);
-    setDays(generateInitialData(ny, nm));
+    const base = generateInitialData(ny, nm);
+    setDays(loadFromStorage(ny, nm, base));
     setSelectedDay(null);
     setModal(null);
   };
