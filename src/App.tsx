@@ -762,13 +762,6 @@ export default function App() {
                     >
                       {day}
                     </span>
-                    <button
-                      className={`rc-check ${d.read ? "read" : "unread"}`}
-                      onClick={(e) => toggleRead(day, e)}
-                      title={d.read ? "已讀 ✓" : "未讀"}
-                    >
-                      {d.read ? "✓" : ""}
-                    </button>
                   </div>
                   <div
                     className="rc-cell-book"
@@ -782,9 +775,13 @@ export default function App() {
                     {d.favorite && (
                       <span className="rc-badge-fav">{"♥"}</span>
                     )}
-                    {d.read && (
-                      <span className="rc-badge-read">{"✓"}</span>
-                    )}
+                    <span
+                      className={`rc-badge-read${d.read ? "" : " rc-badge-unread"}`}
+                      onClick={(e) => toggleRead(day, e)}
+                      title={d.read ? "已讀 ✓" : "標記已讀"}
+                    >
+                      {"✓"}
+                    </span>
                   </div>
                   <div className="rc-hover-overlay">{"📷"}</div>
                 </div>
@@ -795,17 +792,16 @@ export default function App() {
           {/* Legend */}
           <div className="rc-legend">
             <div className="rc-legend-item">
-              <div className="rc-legend-box" style={{ background: "#6b8f71" }}>
+              <div className="rc-legend-box rc-legend-badge-read">
                 {"✓"}
               </div>
               <span>已讀</span>
             </div>
             <div className="rc-legend-item">
-              <div
-                className="rc-legend-box"
-                style={{ border: "1.5px solid #3a3530" }}
-              />
-              <span>未讀</span>
+              <div className="rc-legend-box rc-legend-badge-unread">
+                {"✓"}
+              </div>
+              <span>未讀（點 ✓ 標記）</span>
             </div>
             <div className="rc-legend-item">
               <span>{"📷"}</span>
