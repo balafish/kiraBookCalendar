@@ -213,6 +213,10 @@ export default function App() {
 
   /* ── Carousel computed ── */
 
+  // Carousel: circular navigation within the current month
+  const todayDay = now.getDate();
+  const centerDayNum = ((todayDay - 1 + weekOffset) % daysInMonth + daysInMonth) % daysInMonth + 1;
+
   const carouselDays: {
     date: Date;
     dayNum: number;
@@ -222,19 +226,19 @@ export default function App() {
     isToday: boolean;
   }[] = [];
   for (let i = -4; i <= 4; i++) {
-    const d = new Date(now);
-    d.setDate(now.getDate() + weekOffset + i);
+    const dn = ((centerDayNum - 1 + i) % daysInMonth + daysInMonth) % daysInMonth + 1;
+    const d = new Date(year, month, dn);
     carouselDays.push({
       date: d,
-      dayNum: d.getDate(),
+      dayNum: dn,
       dayOfWeek: d.getDay(),
-      inMonth: d.getFullYear() === year && d.getMonth() === month,
+      inMonth: true,
       offset: i,
-      isToday: weekOffset + i === 0,
+      isToday: dn === todayDay,
     });
   }
   const centerDay = carouselDays[4];
-  const centerDayData = centerDay.inMonth ? days[centerDay.dayNum] : null;
+  const centerDayData = days[centerDay.dayNum] ?? null;
 
   const carouselTransform = (offset: number): React.CSSProperties => {
     const abs = Math.abs(offset);
