@@ -146,6 +146,26 @@ export default function App() {
   const totalCount = Object.keys(days).length;
   const progress = Math.round((readCount / totalCount) * 100);
 
+  // Compute this week (Sun-Sat containing today)
+  const isCurrentMonth =
+    year === now.getFullYear() && month === now.getMonth();
+  const todayDayNum = now.getDate();
+  const todayDayOfWeek = now.getDay(); // 0=Sun
+
+  const weekDays: { dayNum: number; dayOfWeek: number; inMonth: boolean }[] =
+    [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - todayDayOfWeek + i);
+    weekDays.push({
+      dayNum: d.getDate(),
+      dayOfWeek: i,
+      inMonth: d.getFullYear() === year && d.getMonth() === month,
+    });
+  }
+
+  const todayData = isCurrentMonth ? days[todayDayNum] : null;
+
   return (
     <div className="rc-root">
       <input
@@ -203,87 +223,170 @@ export default function App() {
           </div>
         </div>
 
-        {/* Month Nav */}
-        <div className="rc-nav">
-          <button className="rc-nav-btn" onClick={() => navigateMonth(-1)}>
-            {"‹"}
-          </button>
-          <div className="rc-month-label">
-            {MONTH_NAMES[month]} {year}
-          </div>
-          <button className="rc-nav-btn" onClick={() => navigateMonth(1)}>
-            {"›"}
-          </button>
-        </div>
-
-        {/* Day headers */}
-        <div className="rc-day-headers">
-          {DAY_NAMES_FULL.map((d, i) => (
-            <div key={d} className="rc-day-header">
-              <span className="rc-day-header-full">{d}</span>
-              <span className="rc-day-header-short">{DAY_NAMES_SHORT[i]}</span>
+        {/* === This Week Section === */}
+        {isCurrentMonth && (
+          <section className="rc-section">
+            <h2 className="rc-section-title">{"本週書單"}</h2>
+            <div className="rc-week-strip">
+              {weekDays.map((wd) => {
+                const d = wd.inMonth ? days[wd.dayNum] : null;
+                const isToday = wd.dayNum === todayDayNum && wd.inMonth;
+                return (
+                  <div
+                    key={wd.dayOfWeek}
+                    className={`rc-week-card${isToday ? " rc-week-today" : ""}${!wd.inMonth ? " rc-week-outside" : ""}`}
+                    onClick={() => wd.inMonth && d && setModal(wd.dayNum)}
+                  >
+                    <div className="rc-week-day-label">
+                      {DAY_NAMES_SHORT[wd.dayOfWeek]}
+                    </div>
+                    <div className="rc-week-day-num">{wd.dayNum}</div>
+                    <div className="rc-week-book">
+                      {d ? (
+                        <BookCover book={d.book} image={d.image} />
+                      ) : (
+                        <div className="rc-week-book-placeholder" />
+                      )}
+                    </div>
+                    {d && (
+                      <div
+                        className={`rc-week-status ${d.read ? "read" : "unread"}`}
+                      >
+                        {d.read ? "✓" : ""}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
+          </section>
+        )}
 
-        {/* Grid */}
-        <div className="rc-grid">
-          {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-            <div key={`e-${i}`} className="rc-cell-empty" />
-          ))}
-          {Array.from({ length: daysInMonth }).map((_, i) => {
-            const day = i + 1;
-            const d = days[day];
-            if (!d) return null;
-            return (
-              <div
-                key={day}
-                className={`rc-cell${d.isToday ? " today" : ""}`}
-                onClick={() => setModal(day)}
-              >
-                <div className="rc-cell-top">
-                  <span
-                    className={`rc-day-num${d.isToday ? " today-num" : ""}`}
-                  >
-                    {day}
-                  </span>
+        {/* === Today's Book Section === */}
+        {isCurrentMonth && todayData && (
+          <section className="rc-section">
+            <h2 className="rc-section-title">{"今日讀書"}</h2>
+            <div className="rc-today-card" onClick={() => setModal(todayDayNum)}>
+              <div className="rc-today-cover">
+                <BookCover book={todayData.book} image={todayData.image} />
+              </div>
+              <div className="rc-today-info">
+                <div className="rc-today-emoji">{todayData.book.emoji}</div>
+                <div className="rc-today-title">{todayData.book.title}</div>
+                <div className="rc-today-date">
+                  {month + 1}月{todayDayNum}日
+                </div>
+                <div className="rc-today-actions">
                   <button
-                    className={`rc-check ${d.read ? "read" : "unread"}`}
-                    onClick={(e) => toggleRead(day, e)}
-                    title={d.read ? "已讀 ✓" : "未讀"}
+                    className={`rc-today-btn ${todayData.read ? "rc-today-btn-done" : "rc-today-btn-mark"}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleRead(todayDayNum);
+                    }}
                   >
-                    {d.read ? "✓" : ""}
+                    {todayData.read ? "✓ 已讀" : "標記已讀"}
+                  </button>
+                  <button
+                    className="rc-today-btn rc-today-btn-upload"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      triggerUpload(todayDayNum);
+                    }}
+                  >
+                    {"📷 上傳封面"}
                   </button>
                 </div>
-                <div className="rc-cell-book">
-                  <BookCover book={d.book} image={d.image} />
-                </div>
-                <div className="rc-hover-overlay">{"📷"}</div>
               </div>
-            );
-          })}
-        </div>
-
-        {/* Legend */}
-        <div className="rc-legend">
-          <div className="rc-legend-item">
-            <div className="rc-legend-box" style={{ background: "#6b8f71" }}>
-              {"✓"}
             </div>
-            <span>已讀</span>
+          </section>
+        )}
+
+        {/* === Monthly Calendar Section === */}
+        <section className="rc-section">
+          <div className="rc-month-header">
+            <h2 className="rc-section-title">{"月曆總覽"}</h2>
+            <div className="rc-nav">
+              <button className="rc-nav-btn" onClick={() => navigateMonth(-1)}>
+                {"‹"}
+              </button>
+              <div className="rc-month-label">
+                {MONTH_NAMES[month]} {year}
+              </div>
+              <button className="rc-nav-btn" onClick={() => navigateMonth(1)}>
+                {"›"}
+              </button>
+            </div>
           </div>
-          <div className="rc-legend-item">
-            <div
-              className="rc-legend-box"
-              style={{ border: "1.5px solid #3a3530" }}
-            />
-            <span>未讀</span>
+
+          {/* Day headers */}
+          <div className="rc-day-headers">
+            {DAY_NAMES_FULL.map((d, i) => (
+              <div key={d} className="rc-day-header">
+                <span className="rc-day-header-full">{d}</span>
+                <span className="rc-day-header-short">{DAY_NAMES_SHORT[i]}</span>
+              </div>
+            ))}
           </div>
-          <div className="rc-legend-item">
-            <span>{"📷"}</span>
-            <span>點擊格子管理封面</span>
+
+          {/* Grid */}
+          <div className="rc-grid">
+            {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+              <div key={`e-${i}`} className="rc-cell-empty" />
+            ))}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const d = days[day];
+              if (!d) return null;
+              return (
+                <div
+                  key={day}
+                  className={`rc-cell${d.isToday ? " today" : ""}`}
+                  onClick={() => setModal(day)}
+                >
+                  <div className="rc-cell-top">
+                    <span
+                      className={`rc-day-num${d.isToday ? " today-num" : ""}`}
+                    >
+                      {day}
+                    </span>
+                    <button
+                      className={`rc-check ${d.read ? "read" : "unread"}`}
+                      onClick={(e) => toggleRead(day, e)}
+                      title={d.read ? "已讀 ✓" : "未讀"}
+                    >
+                      {d.read ? "✓" : ""}
+                    </button>
+                  </div>
+                  <div className="rc-cell-book">
+                    <BookCover book={d.book} image={d.image} />
+                  </div>
+                  <div className="rc-hover-overlay">{"📷"}</div>
+                </div>
+              );
+            })}
           </div>
-        </div>
+
+          {/* Legend */}
+          <div className="rc-legend">
+            <div className="rc-legend-item">
+              <div className="rc-legend-box" style={{ background: "#6b8f71" }}>
+                {"✓"}
+              </div>
+              <span>已讀</span>
+            </div>
+            <div className="rc-legend-item">
+              <div
+                className="rc-legend-box"
+                style={{ border: "1.5px solid #3a3530" }}
+              />
+              <span>未讀</span>
+            </div>
+            <div className="rc-legend-item">
+              <span>{"📷"}</span>
+              <span>點擊格子管理封面</span>
+            </div>
+          </div>
+        </section>
       </div>
 
       {/* Modal */}
