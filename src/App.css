@@ -403,24 +403,6 @@
   overflow: hidden;
 }
 
-.rc-week-status {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  color: #fff;
-}
-
-.rc-week-status.read {
-  background: #6b8f71;
-}
-
-.rc-week-status.unread {
-  border: 1.5px solid #3a3530;
-}
 
 /* ── Notes Section ── */
 .rc-notes-card {
@@ -1309,7 +1291,6 @@
   .rc-week-day-label { font-size: 9px; }
   .rc-week-day-num { font-size: 10px; }
   .rc-week-center .rc-week-day-num { font-size: 12px; }
-  .rc-week-status { width: 14px; height: 14px; font-size: 7px; }
   .rc-week-center-title { font-size: 8px; -webkit-line-clamp: 1; }
   .rc-week-nav-btn { width: 24px; height: 24px; font-size: 16px; }
   .rc-week-nav-wrapper { gap: 4px; }

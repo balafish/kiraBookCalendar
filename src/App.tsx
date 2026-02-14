@@ -618,13 +618,6 @@ export default function App() {
                           {d.book.title}
                         </div>
                       )}
-                      {d && (
-                        <div
-                          className={`rc-week-status ${d.read ? "read" : "unread"}`}
-                        >
-                          {d.read ? "✓" : ""}
-                        </div>
-                      )}
                     </div>
                   );
                 })}
