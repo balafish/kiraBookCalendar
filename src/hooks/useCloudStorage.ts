@@ -28,8 +28,8 @@ function extractSaveData(days: DaysMap): SavedData {
         notes: v.notes || "",
         book: {
           title: v.book.title,
-          author: v.book.author,
-          description: v.book.description,
+          author: v.book.author || "",
+          description: v.book.description || "",
           emoji: v.book.emoji,
           color: v.book.color,
         },
