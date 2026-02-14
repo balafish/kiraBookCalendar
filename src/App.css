@@ -456,6 +456,8 @@
   color: #e8e4df;
   line-height: 1.6;
   white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
   cursor: pointer;
   padding: 8px;
   border-radius: 8px;
@@ -871,6 +873,9 @@
 .rc-modal-book-info {
   text-align: center;
   margin-bottom: 16px;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .rc-modal-book-author {
@@ -907,6 +912,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .rc-book-edit-fields {
@@ -1011,6 +1018,8 @@
   font-size: 13px;
   color: #e8e4df;
   font-weight: 600;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .rc-book-search-item-author {
@@ -1111,6 +1120,9 @@
   max-width: 480px;
   margin: 0 auto;
   box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-wrap: break-word;
+  word-break: break-word;
   animation: fadeIn 0.2s ease;
 }
 
@@ -1124,6 +1136,8 @@
 .rc-modal-title {
   font-size: 20px;
   font-weight: 600;
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .rc-modal-close {
@@ -1161,6 +1175,8 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   color: #a89f91;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .rc-modal-actions {
