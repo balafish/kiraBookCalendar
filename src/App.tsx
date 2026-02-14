@@ -105,7 +105,7 @@ export default function App() {
   const prevUidRef = useRef<string | null | undefined>(undefined);
   const longPressRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [calendarView, setCalendarView] = useState<"week" | "biweek" | "month">(
-    "month",
+    "biweek",
   );
   const [bookEditMode, setBookEditMode] = useState(false);
   const [bookEditTitle, setBookEditTitle] = useState("");
