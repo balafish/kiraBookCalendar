@@ -10,6 +10,7 @@
   color: #e8e4df;
   font-family: 'Crimson Text', Georgia, serif;
   padding: 24px 16px;
+  overflow-x: hidden;
 }
 
 .rc-container {
@@ -257,6 +258,7 @@
   align-items: center;
   justify-content: center;
   touch-action: pan-y;
+  overflow: hidden;
 }
 
 .rc-carousel-track {
@@ -952,6 +954,7 @@
   inset: 0;
   background: #0e0d0c;
   z-index: 1000;
+  overflow-x: hidden;
   overflow-y: auto;
   animation: fadeIn 0.2s ease;
 }
@@ -967,7 +970,7 @@
   padding: 20px;
   padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   width: 100%;
-  max-width: 480px;
+  max-width: min(480px, 100vw);
   margin: 0 auto;
   box-sizing: border-box;
   overflow-x: hidden;
