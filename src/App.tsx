@@ -117,6 +117,7 @@ export default function App() {
   const [searching, setSearching] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
   const weekTouchRef = useRef<{ startX: number; startY: number } | null>(null);
+  const [carouselExpanded, setCarouselExpanded] = useState(false);
 
   // Reset data when user changes (login/logout/switch account)
   useEffect(() => {
@@ -282,33 +283,52 @@ export default function App() {
   const totalCount = Object.keys(days).length;
   const progress = Math.round((readCount / totalCount) * 100);
 
-  // Compute week centered on today + offset
+  // Compute carousel days centered on today + offset (-4..+4 = 9 items)
   const isCurrentMonth =
     year === now.getFullYear() && month === now.getMonth();
   const todayDayNum = now.getDate();
 
-  const weekDays: {
+  const carouselDays: {
     date: Date;
     dayNum: number;
     dayOfWeek: number;
     inMonth: boolean;
-    isCenter: boolean;
+    offset: number;
     isToday: boolean;
   }[] = [];
-  for (let i = -3; i <= 3; i++) {
+  for (let i = -4; i <= 4; i++) {
     const d = new Date(now);
     d.setDate(now.getDate() + weekOffset + i);
-    weekDays.push({
+    carouselDays.push({
       date: d,
       dayNum: d.getDate(),
       dayOfWeek: d.getDay(),
       inMonth: d.getFullYear() === year && d.getMonth() === month,
-      isCenter: i === 0,
+      offset: i,
       isToday: weekOffset + i === 0,
     });
   }
+  const centerDay = carouselDays[4]; // offset=0, center of the carousel
+  const centerDayData = centerDay.inMonth ? days[centerDay.dayNum] : null;
 
-  const todayData = isCurrentMonth ? days[todayDayNum] : null;
+  const carouselTransform = (offset: number): React.CSSProperties => {
+    const abs = Math.abs(offset);
+    if (abs > 3) {
+      return { opacity: 0, pointerEvents: "none", position: "absolute" };
+    }
+    const tx = offset * 52;
+    const ry = offset * -20;
+    const tz = -abs * 100;
+    const s = Math.max(1 - abs * 0.18, 0.5);
+    const o = Math.max(1 - abs * 0.25, 0);
+    return {
+      transform: `translateX(${tx}%) rotateY(${ry}deg) translateZ(${tz}px) scale(${s})`,
+      opacity: o,
+      zIndex: 10 - abs,
+      position: "absolute",
+      pointerEvents: abs > 2 ? "none" : "auto",
+    };
+  };
 
   const updateNotes = (day: number, text: string) => {
     setDays((prev) => ({
@@ -353,6 +373,7 @@ export default function App() {
     setBookEditMode(false);
     setBookSearchResults([]);
     setSearchQuery("");
+    setEditingNotes(false);
   };
 
   // Open book edit mode
@@ -516,89 +537,84 @@ export default function App() {
           </button>
         </div>
 
-        {/* Header */}
-        <div className="rc-header">
-          <div>
-            <h1 className="rc-title">{"📚 Kira 愛讀冊"}</h1>
-            <p className="rc-subtitle">{"每日一書 · track your daily reads"}</p>
-          </div>
-          <div className="rc-stats">
-            <div>
-              <div className="rc-stat-num">
-                {readCount}
-                <span>/{totalCount}</span>
+        {/* === Carousel Section (header + 3D carousel + info panel) === */}
+        {isCurrentMonth && (
+          <section className="rc-carousel-section">
+            {/* Carousel header: title + inline progress */}
+            <div className="rc-carousel-header">
+              <div>
+                <h1 className="rc-title">{"📚 Kira 愛讀冊"}</h1>
+                <p className="rc-subtitle">{"每日一書 · track your daily reads"}</p>
               </div>
-              <div className="rc-stat-label">completed</div>
+              <div className="rc-inline-progress">
+                <span className="rc-progress-text">
+                  {readCount}<span>/{totalCount}</span>
+                </span>
+                <div
+                  className="rc-ring-small"
+                  style={{
+                    background: `conic-gradient(#6b8f71 ${progress}%, #2a2520 ${progress}%)`,
+                  }}
+                >
+                  <div className="rc-ring-small-inner">{progress}%</div>
+                </div>
+              </div>
             </div>
+
+            {weekOffset !== 0 && (
+              <button
+                className="rc-carousel-reset"
+                onClick={() => { setWeekOffset(0); setCarouselExpanded(false); }}
+              >
+                {"回到今天"}
+              </button>
+            )}
+
+            {/* 3D Carousel */}
             <div
-              className="rc-ring"
-              style={{
-                background: `conic-gradient(#6b8f71 ${progress}%, #2a2520 ${progress}%)`,
+              className="rc-carousel-stage"
+              onTouchStart={(e) => {
+                weekTouchRef.current = {
+                  startX: e.touches[0].clientX,
+                  startY: e.touches[0].clientY,
+                };
+              }}
+              onTouchEnd={(e) => {
+                if (!weekTouchRef.current) return;
+                const dx = e.changedTouches[0].clientX - weekTouchRef.current.startX;
+                const dy = e.changedTouches[0].clientY - weekTouchRef.current.startY;
+                weekTouchRef.current = null;
+                if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+                  setWeekOffset((o) => o + (dx < 0 ? 1 : -1));
+                  setCarouselExpanded(false);
+                }
               }}
             >
-              <div className="rc-ring-inner">{progress}%</div>
-            </div>
-          </div>
-        </div>
-
-        {/* === This Week Section (centered on today + offset) === */}
-        {isCurrentMonth && (
-          <section className="rc-section">
-            <div className="rc-week-header">
-              <h2 className="rc-section-title">{"本週書單"}</h2>
-              {weekOffset !== 0 && (
-                <button
-                  className="rc-week-reset"
-                  onClick={() => setWeekOffset(0)}
-                >
-                  {"回到今天"}
-                </button>
-              )}
-            </div>
-            <div className="rc-week-nav-wrapper">
-              <button
-                className="rc-week-nav-btn rc-week-nav-prev"
-                onClick={() => setWeekOffset((o) => o - 1)}
-              >
-                {"‹"}
-              </button>
-              <div
-                className="rc-week-strip"
-                onTouchStart={(e) => {
-                  weekTouchRef.current = {
-                    startX: e.touches[0].clientX,
-                    startY: e.touches[0].clientY,
-                  };
-                }}
-                onTouchEnd={(e) => {
-                  if (!weekTouchRef.current) return;
-                  const dx = e.changedTouches[0].clientX - weekTouchRef.current.startX;
-                  const dy = e.changedTouches[0].clientY - weekTouchRef.current.startY;
-                  weekTouchRef.current = null;
-                  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-                    setWeekOffset((o) => o + (dx < 0 ? 1 : -1));
-                  }
-                }}
-              >
-                {weekDays.map((wd, idx) => {
+              <div className="rc-carousel-track">
+                {carouselDays.map((wd, idx) => {
                   const d = wd.inMonth ? days[wd.dayNum] : null;
                   return (
                     <div
                       key={idx}
-                      className={`rc-week-card${wd.isCenter ? " rc-week-center" : ""}${wd.isToday ? " rc-week-today" : ""}${!wd.inMonth ? " rc-week-outside" : ""}`}
-                      onClick={() => wd.inMonth && d && setModal(wd.dayNum)}
+                      className={`rc-carousel-item${wd.isToday ? " rc-carousel-today" : ""}${!wd.inMonth ? " rc-carousel-outside" : ""}`}
+                      data-offset={wd.offset}
+                      style={carouselTransform(wd.offset)}
+                      onClick={() => {
+                        if (wd.offset === 0) {
+                          // Center book: toggle info panel
+                          setCarouselExpanded((v) => !v);
+                        } else {
+                          // Side book: bring to center
+                          setWeekOffset((o) => o + wd.offset);
+                          setCarouselExpanded(false);
+                        }
+                      }}
                     >
-                      <div className="rc-week-day-label">
+                      <div className="rc-carousel-day-label">
                         {DAY_NAMES_SHORT[wd.dayOfWeek]}
                       </div>
-                      <div className="rc-week-day-num">{wd.dayNum}</div>
-                      <div
-                        className="rc-week-book"
-                        onMouseEnter={(e) =>
-                          wd.inMonth && d && bookMouseEnter(wd.dayNum, e)
-                        }
-                        onMouseLeave={hideTooltip}
-                      >
+                      <div className="rc-carousel-day-num">{wd.dayNum}</div>
+                      <div className="rc-carousel-book-wrapper">
                         {d ? (
                           <>
                             <BookCover book={d.book} image={d.image} />
@@ -610,90 +626,106 @@ export default function App() {
                             )}
                           </>
                         ) : (
-                          <div className="rc-week-book-placeholder" />
+                          <div className="rc-carousel-placeholder" />
+                        )}
+                        {/* Notes overlay on center book (today only) */}
+                        {wd.offset === 0 && wd.isToday && d?.notes && (
+                          <div className="rc-carousel-notes-overlay">
+                            <p>{d.notes}</p>
+                          </div>
                         )}
                       </div>
-                      {wd.isCenter && d && (
-                        <div className="rc-week-center-title">
-                          {d.book.title}
-                        </div>
-                      )}
                     </div>
                   );
                 })}
               </div>
+
+              {/* Arrow nav */}
               <button
-                className="rc-week-nav-btn rc-week-nav-next"
-                onClick={() => setWeekOffset((o) => o + 1)}
+                className="rc-carousel-arrow rc-carousel-arrow-left"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setWeekOffset((o) => o - 1);
+                  setCarouselExpanded(false);
+                }}
+              >
+                {"‹"}
+              </button>
+              <button
+                className="rc-carousel-arrow rc-carousel-arrow-right"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setWeekOffset((o) => o + 1);
+                  setCarouselExpanded(false);
+                }}
               >
                 {"›"}
               </button>
             </div>
+
+            {/* Center book title (always visible below carousel) */}
+            {centerDayData && (
+              <div className="rc-carousel-center-label">
+                <span className="rc-carousel-center-emoji">{centerDayData.book.emoji}</span>
+                <span className="rc-carousel-center-name">{centerDayData.book.title}</span>
+              </div>
+            )}
+
+            {/* Expandable info panel */}
+            {carouselExpanded && centerDayData && (
+              <div className="rc-carousel-info-panel">
+                {centerDayData.book.author && (
+                  <div className="rc-info-author">{centerDayData.book.author}</div>
+                )}
+                {centerDayData.notes && (
+                  <div className="rc-info-notes">{centerDayData.notes}</div>
+                )}
+                <div className="rc-info-actions">
+                  <button
+                    className={`rc-info-action-btn${centerDayData.read ? " active" : ""}`}
+                    onClick={(e) => toggleRead(centerDay.dayNum, e)}
+                  >
+                    {centerDayData.read ? "✓ 已讀" : "✓ 標記已讀"}
+                  </button>
+                  <button
+                    className={`rc-info-action-btn rc-info-fav-btn${centerDayData.favorite ? " active" : ""}`}
+                    onClick={(e) => toggleFavorite(centerDay.dayNum, e)}
+                  >
+                    {centerDayData.favorite ? "♥ 已收藏" : "♡ 收藏"}
+                  </button>
+                  <button
+                    className="rc-info-action-btn rc-info-detail-btn"
+                    onClick={() => setModal(centerDay.dayNum)}
+                  >
+                    {"詳細"}
+                  </button>
+                </div>
+              </div>
+            )}
           </section>
         )}
 
-        {/* === Today's Notes Section === */}
-        {isCurrentMonth && todayData && (
-          <section className="rc-section">
-            <h2 className="rc-section-title">{"今日筆記"}</h2>
-            <div className="rc-notes-card">
-              <div className="rc-notes-header">
-                <span className="rc-notes-date">
-                  {todayData.book.emoji} {todayData.book.title} — {month + 1}月
-                  {todayDayNum}日
-                </span>
-                {!editingNotes && (
-                  <button
-                    className="rc-notes-edit-btn"
-                    onClick={() => {
-                      setNotesDraft(todayData.notes);
-                      setEditingNotes(true);
-                    }}
-                  >
-                    {"編輯"}
-                  </button>
-                )}
-              </div>
-              {editingNotes ? (
-                <div className="rc-notes-editor">
-                  <textarea
-                    className="rc-notes-textarea"
-                    value={notesDraft}
-                    onChange={(e) => setNotesDraft(e.target.value)}
-                    placeholder="寫下今天的閱讀心得..."
-                    autoFocus
-                  />
-                  <div className="rc-notes-actions">
-                    <button
-                      className="rc-notes-save-btn"
-                      onClick={() => {
-                        updateNotes(todayDayNum, notesDraft);
-                        setEditingNotes(false);
-                      }}
-                    >
-                      {"儲存"}
-                    </button>
-                    <button
-                      className="rc-notes-cancel-btn"
-                      onClick={() => setEditingNotes(false)}
-                    >
-                      {"取消"}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className={`rc-notes-display${!todayData.notes ? " rc-notes-empty" : ""}`}
-                  onClick={() => {
-                    setNotesDraft(todayData.notes);
-                    setEditingNotes(true);
-                  }}
-                >
-                  {todayData.notes || "點擊此處寫下今天的閱讀心得..."}
-                </div>
-              )}
+        {/* Non-current-month header fallback */}
+        {!isCurrentMonth && (
+          <div className="rc-carousel-header" style={{ marginBottom: 20 }}>
+            <div>
+              <h1 className="rc-title">{"📚 Kira 愛讀冊"}</h1>
+              <p className="rc-subtitle">{"每日一書 · track your daily reads"}</p>
             </div>
-          </section>
+            <div className="rc-inline-progress">
+              <span className="rc-progress-text">
+                {readCount}<span>/{totalCount}</span>
+              </span>
+              <div
+                className="rc-ring-small"
+                style={{
+                  background: `conic-gradient(#6b8f71 ${progress}%, #2a2520 ${progress}%)`,
+                }}
+              >
+                <div className="rc-ring-small-inner">{progress}%</div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* === Monthly Calendar Section === */}
@@ -1000,6 +1032,62 @@ export default function App() {
                 >
                   {"🗑 移除封面圖片"}
                 </button>
+              )}
+            </div>
+
+            {/* Notes editing in modal */}
+            <div className="rc-modal-notes">
+              <div className="rc-modal-notes-header">
+                <span className="rc-modal-notes-label">{"筆記"}</span>
+                {!editingNotes && (
+                  <button
+                    className="rc-notes-edit-btn"
+                    onClick={() => {
+                      setNotesDraft(days[modal].notes);
+                      setEditingNotes(true);
+                    }}
+                  >
+                    {"編輯"}
+                  </button>
+                )}
+              </div>
+              {editingNotes ? (
+                <div className="rc-notes-editor">
+                  <textarea
+                    className="rc-notes-textarea"
+                    value={notesDraft}
+                    onChange={(e) => setNotesDraft(e.target.value)}
+                    placeholder="寫下閱讀心得..."
+                    autoFocus
+                  />
+                  <div className="rc-notes-actions">
+                    <button
+                      className="rc-notes-save-btn"
+                      onClick={() => {
+                        updateNotes(modal, notesDraft);
+                        setEditingNotes(false);
+                      }}
+                    >
+                      {"儲存"}
+                    </button>
+                    <button
+                      className="rc-notes-cancel-btn"
+                      onClick={() => setEditingNotes(false)}
+                    >
+                      {"取消"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className={`rc-notes-display${!days[modal].notes ? " rc-notes-empty" : ""}`}
+                  onClick={() => {
+                    setNotesDraft(days[modal].notes);
+                    setEditingNotes(true);
+                  }}
+                >
+                  {days[modal].notes || "點擊寫下閱讀心得..."}
+                </div>
               )}
             </div>
           </div>
