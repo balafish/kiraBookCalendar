@@ -1489,6 +1489,38 @@
     gap: 12px;
     font-size: 10px;
   }
+
+  /* Modal */
+  .rc-modal {
+    padding: 16px 14px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    max-width: 100%;
+  }
+  .rc-modal-cover {
+    width: 55%;
+    max-width: 200px;
+  }
+  .rc-modal-title {
+    font-size: 18px;
+  }
+  .rc-modal-close {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+  .rc-modal-btn {
+    padding: 10px;
+    font-size: 14px;
+  }
+  .rc-modal-book-name {
+    font-size: 12px;
+  }
+  .rc-book-edit-search {
+    flex-wrap: wrap;
+  }
+  .rc-book-search-input {
+    flex: 1 1 100%;
+  }
 }
 
 /* ── Very small phones: ≤370px ── */
@@ -1602,5 +1634,22 @@
     width: 12px;
     height: 12px;
     font-size: 7px;
+  }
+
+  /* Modal */
+  .rc-modal {
+    padding: 12px 10px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+  .rc-modal-cover {
+    width: 50%;
+    max-width: 160px;
+  }
+  .rc-modal-title {
+    font-size: 16px;
+  }
+  .rc-modal-btn {
+    padding: 9px;
+    font-size: 13px;
   }
 }
